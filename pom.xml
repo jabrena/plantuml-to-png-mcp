@@ -14,8 +14,15 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
     <!-- Dependencies -->
+    <picocli.version>4.7.7</picocli.version>
+    <plantuml.version>1.2023.13</plantuml.version>
+    <jspecify.version>1.0.0</jspecify.version>
 
     <!-- Test dependencies -->
+    <junit.version>5.12.2</junit.version>
+    <assertj.version>3.26.3</assertj.version>
+    <mockito.version>5.18.0</mockito.version>
+    <byte-buddy.version>1.17.5</byte-buddy.version>
 
     <!-- Maven Plugins -->
     <maven-plugins-flatten.version>1.7.0</maven-plugins-flatten.version>
@@ -39,14 +46,43 @@
       <dependency>
         <groupId>org.junit</groupId>
         <artifactId>junit-bom</artifactId>
-        <version>5.11.0</version>
+        <version>${junit.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
+      <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-bom</artifactId>
+        <version>${mockito.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+    </dependency>
     </dependencies>
   </dependencyManagement>
 
   <dependencies>
+    <!-- CLI Framework -->
+    <dependency>
+      <groupId>info.picocli</groupId>
+      <artifactId>picocli</artifactId>
+      <version>${picocli.version}</version>
+    </dependency>
+
+    <!-- PlantUML Library -->
+    <dependency>
+      <groupId>net.sourceforge.plantuml</groupId>
+      <artifactId>plantuml</artifactId>
+      <version>${plantuml.version}</version>
+    </dependency>
+
+    <!-- Null Safety Annotations -->
+    <dependency>
+      <groupId>org.jspecify</groupId>
+      <artifactId>jspecify</artifactId>
+      <version>${jspecify.version}</version>
+    </dependency>
+
+    <!-- Test Dependencies -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-api</artifactId>
@@ -57,6 +93,37 @@
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-params</artifactId>
       <scope>test</scope>
+    </dependency>
+    <!-- AssertJ for fluent assertions -->
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <version>${assertj.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- Mockito for mocking -->
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <!-- Mockito needs these dependencies updated to fix the issue about org.mockito.plugins.MockMaker -->
+    <dependency>
+        <groupId>net.bytebuddy</groupId>
+        <artifactId>byte-buddy-agent</artifactId>
+        <version>${byte-buddy.version}</version>
+        <scope>test</scope>
+    </dependency>
+    <dependency>
+        <groupId>net.bytebuddy</groupId>
+        <artifactId>byte-buddy</artifactId>
+        <version>${byte-buddy.version}</version>
+        <scope>test</scope>
     </dependency>
   </dependencies>
 
@@ -140,7 +207,7 @@
               -XepOpt:NullAway:CheckOptionalEmptiness=true \
               -XepOpt:NullAway:HandleTestAssertionLibraries=true \
               -XepOpt:NullAway:AssertsEnabled=true \
-              -XepOpt:NullAway:AnnotatedPackages=info.jab.mcp
+              -XepOpt:NullAway:AnnotatedPackages=info.jab
             </arg>
           </compilerArgs>
           <annotationProcessorPaths>
@@ -225,6 +292,45 @@
           <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
           <commitIdGenerationMode>full</commitIdGenerationMode>
         </configuration>
+      </plugin>
+
+      <!-- Maven Shade Plugin for executable JAR -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.6.0</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <filters>
+                <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
+                    <exclude>META-INF/MANIFEST.MF</exclude>
+                    <exclude>META-INF/versions/*/module-info.class</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                  <mainClass>info.jab.core.PlantUMLToPngCli</mainClass>
+                </transformer>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheLicenseResourceTransformer"/>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer"/>
+              </transformers>
+              <createDependencyReducedPom>false</createDependencyReducedPom>
+              <minimizeJar>false</minimizeJar>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>

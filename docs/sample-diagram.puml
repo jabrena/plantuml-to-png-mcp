@@ -1,0 +1,56 @@
+@startuml Sample Sequence Diagram
+!theme plain
+title PlantUML to PNG CLI Tool - Sample Diagram
+
+actor "Developer" as Dev #LightBlue
+participant "CLI Tool" as CLI #LightGreen
+participant "PlantUML Service" as Service #LightCyan
+participant "File System" as FS #Tan
+
+Dev -> CLI : execute --file diagram.puml
+activate CLI
+
+CLI -> CLI : validate file path and extension
+note right of CLI : Check .puml extension\nVerify file exists and is readable
+
+CLI -> Service : isGraphvizAvailable()
+activate Service
+Service --> CLI : true
+deactivate Service
+
+CLI -> Service : convertToPng(path, verbose)
+activate Service
+
+Service -> FS : read .puml file content
+activate FS
+FS --> Service : PlantUML content
+deactivate FS
+
+Service -> Service : validatePlantUMLSyntax()
+note right of Service : Check @startuml/@enduml tags\nBasic syntax validation
+
+Service -> Service : generatePngData()
+note right of Service : Use PlantUML library\nwith Graphviz rendering
+
+Service -> FS : write PNG file (same name, same directory)
+activate FS
+note right of FS : diagram.puml → diagram.png
+FS --> Service : file written successfully
+deactivate FS
+
+Service --> CLI : PNG file path
+deactivate Service
+
+CLI --> Dev : Success: "PNG generated successfully"
+deactivate CLI
+
+note over Dev, FS
+  **Key Features:**
+  • Single file conversion
+  • Automatic file naming
+  • Same directory output
+  • Comprehensive error handling
+  • Graphviz dependency checking
+end note
+
+@enduml

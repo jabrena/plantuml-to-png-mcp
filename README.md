@@ -1,8 +1,11 @@
 # Plantuml to PNG
 
+![](./docs/sample-diagram.png)
+
 ## How to build in local?
 
 ```bash
+./mvnw dependency:tree
 ./mvnw buildplan:list-phase
 ./mvnw license:third-party-report
 jwebserver -p 8000 -d "$(pwd)/target/reports/"
@@ -16,8 +19,15 @@ jwebserver -p 8001 -d "$(pwd)/target/site/jacoco"
 ./mvnw versions:display-property-updates
 ```
 
-## References
+## How to test it?
 
+```bash
+./mvnw clean package
+java -jar target/plantuml-to-png-0.1.0.jar --help
+java -jar target/plantuml-to-png-0.1.0.jar --file ./docs/sample-diagram.puml
+```
+
+## References
 - https://picocli.info/
 - https://mvnrepository.com/artifact/net.sourceforge.plantuml/plantuml/1.2023.10
 - https://graphviz.org/
