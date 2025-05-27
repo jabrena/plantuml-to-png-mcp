@@ -1,0 +1,98 @@
+@startuml PlantUMLTool_Class_Diagram
+!theme plain
+skinparam classAttributeIconSize 0
+skinparam classFontStyle bold
+skinparam packageStyle rectangle
+
+title PlantUML to PNG CLI Tool - Class Diagram
+
+' Package declarations
+package "info.jab.core" {
+
+    ' CLI Main Class
+    class PlantUMLToPngCli {
+        - inputFile : String
+        - fileValidator : PlantUMLFileValidator
+        - graphvizValidator : GraphvizValidator
+        - plantUMLService : PlantUMLService
+        --
+        + PlantUMLToPngCli()
+        + PlantUMLToPngCli(fileValidator, graphvizValidator, plantUMLService)
+        + call() : Integer
+        - validateGraphviz() : Optional<Boolean>
+        - validateInputFile() : Optional<Path>
+        - convertToPng(inputPath : Path) : Optional<Boolean>
+        + main(args : String[]) : void
+    }
+
+    ' Core Service Class
+    class PlantUMLService {
+        --
+        + convertToPng(inputPath : Path) : Optional<Path>
+        - isValidPlantUMLSyntax(plantUMLContent : String) : boolean
+        ~ generatePngData(plantUMLContent : String) : Optional<byte[]>
+        - createOutputPath(inputPath : Path) : Path
+    }
+
+    ' File Validator Class
+    class PlantUMLFileValidator {
+        - {static} PLANTUML_EXTENSION : String = ".puml"
+        --
+        + validatePlantUMLFile(filePath : String) : Optional<Path>
+        - isFilePathValid(filePath : String) : boolean
+        - isFileExists(path : Path) : boolean
+        - isRegularFile(path : Path) : boolean
+        - isReadable(path : Path) : boolean
+        - hasPlantUMLExtension(path : Path) : boolean
+    }
+
+    ' Graphviz Validator Class
+    class GraphvizValidator {
+        - {static} DOT_COMMAND : String = "dot"
+        - {static} VERSION_FLAG : String = "-V"
+        --
+        + isGraphvizAvailable() : boolean
+    }
+}
+
+' External Dependencies (shown as interfaces for clarity)
+package "External Dependencies" <<Cloud>> {
+    interface "Callable<Integer>" as Callable
+    interface "picocli.CommandLine" as PicoCLI
+    interface "java.nio.file.Path" as Path
+    interface "java.util.Optional" as Optional
+    interface "net.sourceforge.plantuml" as PlantUMLLib
+}
+
+' Relationships
+PlantUMLToPngCli ..|> Callable : implements
+PlantUMLToPngCli --> PlantUMLFileValidator : uses
+PlantUMLToPngCli --> GraphvizValidator : uses
+PlantUMLToPngCli --> PlantUMLService : uses
+PlantUMLToPngCli ..> PicoCLI : depends on
+
+PlantUMLService ..> PlantUMLLib : depends on
+PlantUMLService ..> Path : uses
+PlantUMLService ..> Optional : returns
+
+PlantUMLFileValidator ..> Path : validates
+PlantUMLFileValidator ..> Optional : returns
+
+GraphvizValidator ..> "ProcessBuilder" : uses
+
+' Annotations
+PlantUMLToPngCli : @Command
+PlantUMLToPngCli : @Option(names = {"-f", "--file"})
+
+' Notes for important design patterns
+note right of PlantUMLToPngCli : **Command Pattern**\nImplements Callable<Integer>\nfor PicoCLI framework integration
+
+note bottom of PlantUMLService : **Service Layer**\nEncapsulates core business logic\nfor PlantUML to PNG conversion
+
+note left of PlantUMLFileValidator : **Validator Pattern**\nValidates file existence,\nreadability, and extension
+
+note left of GraphvizValidator : **System Dependency Checker**\nValidates external Graphviz\navailability via process execution
+
+note top of "External Dependencies" : **Key External Dependencies:**\n• PicoCLI for CLI framework\n• PlantUML library for conversion\n• Java NIO for file operations\n• Optional for null safety
+
+@enduml
