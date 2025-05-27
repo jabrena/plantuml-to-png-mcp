@@ -14,5 +14,7 @@ jobs:
         with:
           distribution: 'graalvm' # See 'Supported distributions' for available options
           java-version: '24'
+      - name: Install Graphviz
+        run: sudo apt-get -y install graphviz
       - name: Maven build
         run: ./mvnw --batch-mode --no-transfer-progress verify --file pom.xml
