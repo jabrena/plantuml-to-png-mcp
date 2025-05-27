@@ -1,0 +1,25 @@
+@startuml PlantUML to PNG CLI Tool - System Context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title System Context diagram for PlantUML to PNG CLI Tool
+
+' External Actors/Users
+Person(Developer, "Developer", "Software developer who creates PlantUML diagrams and needs PNG output for GitHub documentation")
+
+' The Main System
+System(PlantUMLTool, "PlantUML to PNG CLI Tool", "Command-line tool that converts PlantUML files to PNG format with automatic file naming and placement")
+
+' External Systems
+System_Ext(FileSystem, "File System", "Local file system where PlantUML source files are stored and PNG outputs are generated")
+System_Ext(Graphviz, "Graphviz", "External graph visualization software used by PlantUML for rendering diagrams")
+System_Ext(GitHub, "GitHub Repository", "Version control system where generated PNG diagrams are used in Markdown documentation")
+
+' Relationships
+Rel(Developer, PlantUMLTool, "Executes CLI tool with .puml file path", "Command Line")
+Rel(PlantUMLTool, FileSystem, "Reads .puml files and writes .png files", "File I/O")
+Rel(PlantUMLTool, Graphviz, "Uses for diagram rendering", "Process Execution")
+Rel(Developer, GitHub, "Commits generated PNG diagrams", "Git")
+Rel(Developer, FileSystem, "Creates and manages .puml files", "File Operations")
+
+SHOW_LEGEND()
+@enduml

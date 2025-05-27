@@ -1,0 +1,32 @@
+@startuml PlantUML to PNG CLI Tool - Container
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title Container diagram for PlantUML to PNG CLI Tool
+
+' External Actors
+Person(Developer, "Developer", "Software developer creating PlantUML diagrams")
+
+' External Systems
+System_Ext(FileSystem, "File System", "Local file system for file storage")
+System_Ext(Graphviz, "Graphviz", "External graph visualization software for diagram rendering")
+
+
+' System Boundary
+System_Boundary(PlantUMLTool, "PlantUML to PNG CLI Tool") {
+    Container(PicoCLI, "PicoCLI Interface", "PicoCLI Framework", "Command-line interface using PicoCLI framework that accepts .puml file paths and handles user interaction")
+
+    Container(PlantUMLService, "PlantUML Service", "Java Service", "Core service that handles file processing, PlantUML conversion, error handling, and coordinates with Graphviz for PNG generation")
+}
+
+' Relationships
+Rel(Developer, PicoCLI, "Executes tool with file path", "Command Line Args")
+
+Rel(PicoCLI, PlantUMLService, "Requests conversion", "Method Calls")
+
+Rel(PlantUMLService, FileSystem, "Read .puml / Write .png", "File I/O")
+Rel(PlantUMLService, Graphviz, "Render diagrams", "Process Execution via PlantUML")
+
+Rel(PlantUMLService, PicoCLI, "Results and error messages", "Return Values")
+
+SHOW_LEGEND()
+@enduml
