@@ -6,6 +6,7 @@ import picocli.CommandLine.Option;
 
 import java.nio.file.Path;
 import java.util.concurrent.Callable;
+import java.util.Optional;
 
 /**
  * PlantUML to PNG CLI Tool
@@ -58,26 +59,38 @@ public class PlantUMLToPngCli implements Callable<Integer> {
 
     @Override
     public Integer call() {
-        // TODO Refactor to be more functional the validation process.
+        return validateGraphviz()
+            .flatMap(_ -> validateInputFile())
+            .flatMap(this::convertToPng)
+            .map(success -> success ? 0 : 1)
+            .orElse(1);
+    }
 
-        // Validate input file
-        Path inputPath = fileValidator.validatePlantUMLFile(inputFile);
-
-        // Validate Graphviz availability
-        if (!graphvizValidator.isGraphvizAvailable()) {
-            System.err.println("Error: Graphviz is not available. Please install Graphviz to use this tool.");
-            return 1;
+    private Optional<Boolean> validateGraphviz() {
+        if (graphvizValidator.isGraphvizAvailable()) {
+            return Optional.of(true);
         }
+        System.err.println("Error: Graphviz is not available. Please install Graphviz to use this tool.");
+        return Optional.empty();
+    }
 
-        // Convert PlantUML to PNG
+    private Optional<Path> validateInputFile() {
+        return fileValidator.validatePlantUMLFile(inputFile)
+            .or(() -> {
+                System.err.println("Error: Invalid PlantUML file. Please check the file path, extension (.puml), and permissions.");
+                return Optional.empty();
+            });
+    }
+
+    private Optional<Boolean> convertToPng(Path inputPath) {
         return plantUMLService.convertToPng(inputPath)
             .map(outputPath -> {
                 System.out.println("Successfully converted: " + inputPath + " -> " + outputPath);
-                return 0;
+                return true;
             })
-            .orElseGet(() -> {
+            .or(() -> {
                 System.err.println("Error: Failed to convert PlantUML file. Please check the file format and content.");
-                return 1;
+                return Optional.of(false);
             });
     }
 
