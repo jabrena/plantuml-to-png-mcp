@@ -81,7 +81,7 @@ public class PlantUMLService {
      * @param plantUMLContent the PlantUML content to convert
      * @return Optional containing the PNG data as a byte array, or empty if conversion fails
      */
-    private Optional<byte[]> generatePngData(String plantUMLContent) {
+    Optional<byte[]> generatePngData(String plantUMLContent) {
         try {
             SourceStringReader reader = new SourceStringReader(plantUMLContent);
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();

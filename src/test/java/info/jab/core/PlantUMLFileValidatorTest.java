@@ -12,10 +12,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.jspecify.annotations.Nullable;
 
@@ -38,10 +38,11 @@ class PlantUMLFileValidatorTest {
         Path validFile = getTestResourcePath("plantuml/valid-simple.puml");
 
         // When
-        Path result = validator.validatePlantUMLFile(validFile.toString());
+        Optional<Path> result = validator.validatePlantUMLFile(validFile.toString());
 
         // Then
-        assertThat(result).isEqualTo(validFile);
+        assertThat(result).isPresent();
+        assertThat(result.get()).isEqualTo(validFile);
     }
 
     private Path getTestResourcePath(String resourcePath) {
@@ -51,58 +52,63 @@ class PlantUMLFileValidatorTest {
     }
 
     @Test
-    void validatePlantUMLFile_withNullPath_shouldThrowException() {
+    void validatePlantUMLFile_withNullPath_shouldReturnEmpty() {
         // Given
         @Nullable String nullPath = null;
 
-        // When & Then
-        assertThatThrownBy(() -> validator.validatePlantUMLFile(nullPath))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("File path cannot be empty");
+        // When
+        Optional<Path> result = validator.validatePlantUMLFile(nullPath);
+
+        // Then
+        assertThat(result).isEmpty();
     }
 
     @Test
-    void validatePlantUMLFile_withEmptyPath_shouldThrowException() {
-        // When & Then
-        assertThatThrownBy(() -> validator.validatePlantUMLFile(""))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("File path cannot be empty");
+    void validatePlantUMLFile_withEmptyPath_shouldReturnEmpty() {
+        // When
+        Optional<Path> result = validator.validatePlantUMLFile("");
+
+        // Then
+        assertThat(result).isEmpty();
     }
 
     @Test
-    void validatePlantUMLFile_withWhitespaceOnlyPath_shouldThrowException() {
-        // When & Then
-        assertThatThrownBy(() -> validator.validatePlantUMLFile("   "))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("File path cannot be empty");
+    void validatePlantUMLFile_withWhitespaceOnlyPath_shouldReturnEmpty() {
+        // When
+        Optional<Path> result = validator.validatePlantUMLFile("   ");
+
+        // Then
+        assertThat(result).isEmpty();
     }
 
     @Test
-    void validatePlantUMLFile_withNonExistentFile_shouldThrowException() {
+    void validatePlantUMLFile_withNonExistentFile_shouldReturnEmpty() {
         // Given
         String nonExistentFile = tempDir.resolve("nonexistent.puml").toString();
 
-        // When & Then
-        assertThatThrownBy(() -> validator.validatePlantUMLFile(nonExistentFile))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("File does not exist: " + nonExistentFile);
+        // When
+        Optional<Path> result = validator.validatePlantUMLFile(nonExistentFile);
+
+        // Then
+        assertThat(result).isEmpty();
     }
 
     @Test
-    void validatePlantUMLFile_withDirectory_shouldThrowException() throws IOException {
+    void validatePlantUMLFile_withDirectory_shouldReturnEmpty() throws IOException {
         // Given
         Path directory = tempDir.resolve("testdir");
         Files.createDirectory(directory);
 
-        // When & Then
-        assertThatThrownBy(() -> validator.validatePlantUMLFile(directory.toString()))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("Path is not a regular file: " + directory.toString());
+        // When
+        Optional<Path> result = validator.validatePlantUMLFile(directory.toString());
+
+        // Then
+        assertThat(result).isEmpty();
     }
 
     @Test
     @DisabledOnOs(OS.WINDOWS)
-    void validatePlantUMLFile_withUnreadableFile_shouldThrowException() throws IOException {
+    void validatePlantUMLFile_withUnreadableFile_shouldReturnEmpty() throws IOException {
         // Given
         Path unreadableFile = tempDir.resolve("unreadable.puml");
         Files.createFile(unreadableFile);
@@ -110,34 +116,37 @@ class PlantUMLFileValidatorTest {
         // Make file unreadable (POSIX systems only)
         Files.setPosixFilePermissions(unreadableFile, Set.of(PosixFilePermission.OWNER_WRITE));
 
-        // When & Then
-        assertThatThrownBy(() -> validator.validatePlantUMLFile(unreadableFile.toString()))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("File is not readable: " + unreadableFile.toString());
+        // When
+        Optional<Path> result = validator.validatePlantUMLFile(unreadableFile.toString());
+
+        // Then
+        assertThat(result).isEmpty();
     }
 
     @Test
-    void validatePlantUMLFile_withWrongExtension_shouldThrowException() throws IOException {
+    void validatePlantUMLFile_withWrongExtension_shouldReturnEmpty() throws IOException {
         // Given
         Path wrongExtensionFile = tempDir.resolve("test.txt");
         Files.createFile(wrongExtensionFile);
 
-        // When & Then
-        assertThatThrownBy(() -> validator.validatePlantUMLFile(wrongExtensionFile.toString()))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("File must have .puml extension: " + wrongExtensionFile.toString());
+        // When
+        Optional<Path> result = validator.validatePlantUMLFile(wrongExtensionFile.toString());
+
+        // Then
+        assertThat(result).isEmpty();
     }
 
     @Test
-    void validatePlantUMLFile_withNoExtension_shouldThrowException() throws IOException {
+    void validatePlantUMLFile_withNoExtension_shouldReturnEmpty() throws IOException {
         // Given
         Path noExtensionFile = tempDir.resolve("test");
         Files.createFile(noExtensionFile);
 
-        // When & Then
-        assertThatThrownBy(() -> validator.validatePlantUMLFile(noExtensionFile.toString()))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("File must have .puml extension: " + noExtensionFile.toString());
+        // When
+        Optional<Path> result = validator.validatePlantUMLFile(noExtensionFile.toString());
+
+        // Then
+        assertThat(result).isEmpty();
     }
 
     @Test
@@ -147,10 +156,11 @@ class PlantUMLFileValidatorTest {
         Files.createFile(uppercaseFile);
 
         // When
-        Path result = validator.validatePlantUMLFile(uppercaseFile.toString());
+        Optional<Path> result = validator.validatePlantUMLFile(uppercaseFile.toString());
 
         // Then
-        assertThat(result).isEqualTo(uppercaseFile);
+        assertThat(result).isPresent();
+        assertThat(result.get()).isEqualTo(uppercaseFile);
     }
 
     @Test
@@ -160,11 +170,10 @@ class PlantUMLFileValidatorTest {
         Files.createFile(mixedCaseFile);
 
         // When
-        Path result = validator.validatePlantUMLFile(mixedCaseFile.toString());
+        Optional<Path> result = validator.validatePlantUMLFile(mixedCaseFile.toString());
 
         // Then
-        assertThat(result).isEqualTo(mixedCaseFile);
+        assertThat(result).isPresent();
+        assertThat(result.get()).isEqualTo(mixedCaseFile);
     }
-
-
 }

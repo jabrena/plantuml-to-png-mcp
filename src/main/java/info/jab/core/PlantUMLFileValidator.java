@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.jspecify.annotations.Nullable;
 
@@ -21,90 +22,78 @@ public class PlantUMLFileValidator {
     private static final String PLANTUML_EXTENSION = ".puml";
 
     /**
-     * Validates a PlantUML file path and returns the corresponding Path object.
+     * Validates a PlantUML file path and returns the corresponding Path object wrapped in Optional.
      *
      * @param filePath The file path to validate
-     * @return A valid Path object for the PlantUML file
-     * @throws IllegalArgumentException if the file path is invalid, file doesn't exist,
-     *                                  is not readable, or doesn't have the correct extension
+     * @return An Optional containing a valid Path object for the PlantUML file, or empty if validation fails
      */
-    public Path validatePlantUMLFile(@Nullable String filePath) {
-        validateFilePathNotEmpty(filePath);
+    public Optional<Path> validatePlantUMLFile(@Nullable String filePath) {
+        if (!isFilePathValid(filePath)) {
+            return Optional.empty();
+        }
 
         // After validation, we know filePath is not null
         String validatedFilePath = Objects.requireNonNull(filePath, "File path should not be null after validation");
         Path path = Paths.get(validatedFilePath);
 
-        validateFileExists(path, validatedFilePath);
-        validateIsRegularFile(path, validatedFilePath);
-        validateIsReadable(path, validatedFilePath);
-        validatePlantUMLExtension(path, validatedFilePath);
+        if (!isFileExists(path) ||
+            !isRegularFile(path) ||
+            !isReadable(path) ||
+            !hasPlantUMLExtension(path)) {
+            return Optional.empty();
+        }
 
-        return path;
+        return Optional.of(path);
     }
 
     /**
      * Validates that the file path is not null or empty.
      *
      * @param filePath The file path to check
-     * @throws IllegalArgumentException if the file path is null or empty
+     * @return true if the file path is valid, false otherwise
      */
-    private void validateFilePathNotEmpty(@Nullable String filePath) {
-        if (Objects.isNull(filePath) || filePath.trim().isEmpty()) {
-            throw new IllegalArgumentException("File path cannot be empty");
-        }
+    private boolean isFilePathValid(@Nullable String filePath) {
+        return !Objects.isNull(filePath) && !filePath.trim().isEmpty();
     }
 
     /**
      * Validates that the file exists.
      *
      * @param path The path to check
-     * @param originalFilePath The original file path string for error messages
-     * @throws IllegalArgumentException if the file does not exist
+     * @return true if the file exists, false otherwise
      */
-    private void validateFileExists(Path path, String originalFilePath) {
-        if (!Files.exists(path)) {
-            throw new IllegalArgumentException("File does not exist: " + originalFilePath);
-        }
+    private boolean isFileExists(Path path) {
+        return Files.exists(path);
     }
 
     /**
      * Validates that the path points to a regular file (not a directory or special file).
      *
      * @param path The path to check
-     * @param originalFilePath The original file path string for error messages
-     * @throws IllegalArgumentException if the path is not a regular file
+     * @return true if the path is a regular file, false otherwise
      */
-    private void validateIsRegularFile(Path path, String originalFilePath) {
-        if (!Files.isRegularFile(path)) {
-            throw new IllegalArgumentException("Path is not a regular file: " + originalFilePath);
-        }
+    private boolean isRegularFile(Path path) {
+        return Files.isRegularFile(path);
     }
 
     /**
      * Validates that the file is readable.
      *
      * @param path The path to check
-     * @param originalFilePath The original file path string for error messages
-     * @throws IllegalArgumentException if the file is not readable
+     * @return true if the file is readable, false otherwise
      */
-    private void validateIsReadable(Path path, String originalFilePath) {
-        if (!Files.isReadable(path)) {
-            throw new IllegalArgumentException("File is not readable: " + originalFilePath);
-        }
+    private boolean isReadable(Path path) {
+        return Files.isReadable(path);
     }
 
     /**
      * Validates that the file has the correct PlantUML extension (.puml).
      *
      * @param path The path to check
-     * @param originalFilePath The original file path string for error messages
-     * @throws IllegalArgumentException if the file doesn't have the .puml extension
+     * @return true if the file has the .puml extension, false otherwise
      */
-    private void validatePlantUMLExtension(Path path, String originalFilePath) {
+    private boolean hasPlantUMLExtension(Path path) {
         String fileName = path.getFileName().toString().toLowerCase(Locale.ROOT);
-        if (!fileName.endsWith(PLANTUML_EXTENSION)) {
-            throw new IllegalArgumentException("File must have " + PLANTUML_EXTENSION + " extension: " + originalFilePath);
-        }
+        return fileName.endsWith(PLANTUML_EXTENSION);
     }
 }

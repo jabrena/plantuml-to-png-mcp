@@ -8,31 +8,35 @@ import java.nio.file.Path;
 import java.util.Objects;
 
 /**
- * Utility class for loading test resources.
+ * Utility class for loading test resources in unit tests.
+ *
+ * This class provides helper methods to load PlantUML test files
+ * from the test resources directory.
  */
 public final class TestResourceLoader {
 
     private TestResourceLoader() {
-        // Utility class
+        // Utility class - prevent instantiation
     }
 
     /**
-     * Loads a PlantUML test resource and writes it to a temporary file.
+     * Loads a PlantUML resource from the test resources directory and copies it to the target path.
      *
-     * @param resourceName the name of the resource file (without path)
-     * @param targetPath   the target path where to write the content
-     * @throws IOException if the resource cannot be loaded or written
+     * @param resourceName The name of the resource file (relative to plantuml/ directory)
+     * @param targetPath The target path where the resource should be copied
+     * @throws IOException if the resource cannot be loaded or copied
      */
     public static void loadPlantUMLResource(String resourceName, Path targetPath) throws IOException {
-        String resourcePath = "/plantuml/" + resourceName;
+        String resourcePath = "plantuml/" + resourceName;
 
-        try (InputStream inputStream = TestResourceLoader.class.getResourceAsStream(resourcePath)) {
-            if (Objects.isNull(inputStream)) {
+        try (InputStream resourceStream = TestResourceLoader.class.getClassLoader()
+                .getResourceAsStream(resourcePath)) {
+
+            if (Objects.isNull(resourceStream)) {
                 throw new IOException("Resource not found: " + resourcePath);
             }
 
-            String content = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-            Files.writeString(targetPath, content, StandardCharsets.UTF_8);
+            Files.copy(resourceStream, targetPath);
         }
     }
 
