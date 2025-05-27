@@ -1,6 +1,6 @@
 # Plantuml to PNG
 
-## References
+## How to build in local?
 
 ```bash
 ./mvnw buildplan:list-phase
@@ -15,3 +15,16 @@ jwebserver -p 8001 -d "$(pwd)/target/site/jacoco"
 ./mvnw versions:display-plugin-updates
 ./mvnw versions:display-property-updates
 ```
+
+## References
+
+- https://picocli.info/
+- https://mvnrepository.com/artifact/net.sourceforge.plantuml/plantuml/1.2023.10
+- https://graphviz.org/
+- https://github.com/plantuml/plantuml
+- https://plantuml.com/es/smetana02
+- https://www.jbang.dev/appstore/
+- ...
+- https://github.com/jabrena/cursor-rules-methodology
+- https://github.com/jabrena/cursor-rules-agile
+- https://github.com/jabrena/cursor-rules-java
