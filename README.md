@@ -30,7 +30,7 @@ jwebserver -p 8001 -d "$(pwd)/target/site/jacoco"
 ./mvnw clean package
 java -jar target/plantuml-to-png-0.2.0.jar --help
 java -jar target/plantuml-to-png-0.2.0.jar --file ./docs/sample-diagram.puml
-java -jar target/plantuml-to-png-0.2.0.jar --watch
+java -jar target/plantuml-to-png-0.2.0.jar --watch docs
 ```
 
 ## References

@@ -43,21 +43,20 @@ public class PlantUMLWatchService {
     }
 
     /**
-     * Starts watching the current directory for PlantUML files.
+     * Starts watching the specified directory for PlantUML files.
      *
      * This method runs indefinitely, checking for new .puml files every polling interval.
      * It converts files that don't have corresponding PNG files.
      *
+     * @param watchDirectory The directory to watch for PlantUML files
      * @return Exit code (0 for success, 1 for error)
      */
-    public Integer startWatching() {
-        System.out.println("Starting watch mode in current directory...");
+    public Integer startWatching(Path watchDirectory) {
+        System.out.println("Starting watch mode in directory: " + watchDirectory);
 
         try {
-            Path currentDirectory = Path.of(System.getProperty("user.dir"));
-
             while (true) {
-                processPlantUMLFiles(currentDirectory);
+                processPlantUMLFiles(watchDirectory);
                 Thread.sleep(pollingIntervalMs);
             }
 
@@ -69,6 +68,18 @@ public class PlantUMLWatchService {
             System.err.println("Error scanning directory for .puml files: " + e.getMessage());
             return 1;
         }
+    }
+
+    /**
+     * Starts watching the current directory for PlantUML files.
+     *
+     * This method runs indefinitely, checking for new .puml files every polling interval.
+     * It converts files that don't have corresponding PNG files.
+     *
+     * @return Exit code (0 for success, 1 for error)
+     */
+    public Integer startWatching() {
+        return startWatching(Path.of(System.getProperty("user.dir")));
     }
 
     /**

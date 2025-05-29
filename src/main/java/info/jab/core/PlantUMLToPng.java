@@ -16,6 +16,7 @@ import java.util.Optional;
 import com.diogonunes.jcolor.Attribute;
 import static com.diogonunes.jcolor.Ansi.colorize;
 import com.github.lalyos.jfiglet.FigletFont;
+import java.nio.file.Files;
 
 /**
  * PlantUML to PNG CLI Tool
@@ -37,13 +38,14 @@ public class PlantUMLToPng implements Callable<Integer> {
         description = "PlantUML file to convert (.puml extension required)"
     )
     @Nullable
-    String inputFile;
+    private String inputFile;
 
     @Option(
         names = {"-w", "--watch"},
-        description = "Watch for changes in the current directory to convert .puml files automatically"
+        description = "Watch for changes in a directory to convert .puml files automatically."
     )
-    boolean watchOption;
+    @Nullable
+    private String watchDirectory;
 
     private final PlantUMLFileValidator fileValidator;
     private final PlantUMLFileService plantUMLService;
@@ -87,8 +89,8 @@ public class PlantUMLToPng implements Callable<Integer> {
             return handleSingleFileConversion(inputFile);
         }
 
-        if (watchOption) {
-            return handleWatchMode();
+        if (Objects.nonNull(watchDirectory)) {
+            return handleWatchMode(watchDirectory);
         }
 
         System.out.println("Use --help to see available options.");
@@ -116,8 +118,28 @@ public class PlantUMLToPng implements Callable<Integer> {
         }
     }
 
-    private CliResult handleWatchMode() {
-        int watchResult = watchService.startWatching();
+    private CliResult handleWatchMode(String parameter) {
+        Path watchDirectory;
+
+        if (Objects.isNull(parameter) || parameter.trim().isEmpty()) {
+            // Use current directory as default
+            watchDirectory = Path.of(System.getProperty("user.dir"));
+            System.out.println("Using current directory for watching: " + parameter);
+        } else {
+            // Validate the provided directory
+            watchDirectory = Path.of(parameter);
+            if (!Files.exists(watchDirectory)) {
+                System.err.println("Error: Directory does not exist: " + parameter);
+                return CliResult.KO;
+            }
+            if (!Files.isDirectory(watchDirectory)) {
+                System.err.println("Error: Path is not a directory: " + parameter);
+                return CliResult.KO;
+            }
+            System.out.println("Using specified directory for watching: " + parameter);
+        }
+
+        int watchResult = watchService.startWatching(watchDirectory);
         return (watchResult == 0) ? CliResult.OK : CliResult.KO;
     }
 

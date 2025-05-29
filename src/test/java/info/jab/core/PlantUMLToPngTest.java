@@ -8,6 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import picocli.CommandLine;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -18,6 +19,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.any;
 
 /**
  * Unit tests for PlantUMLToPng class.
@@ -32,6 +34,7 @@ import static org.mockito.Mockito.when;
  * - Leveraging JSpecify for null safety
  * - Proper verification of mock interactions
  * - Testing the execute() method that returns CliResult for type-safe assertions
+ * - Using CommandLine API for proper CLI argument simulation
  */
 @NullMarked
 @ExtendWith(MockitoExtension.class)
@@ -50,11 +53,13 @@ class PlantUMLToPngTest {
     private PlantUMLFileValidator mockValidator;
 
     private PlantUMLToPng cli;
+    private CommandLine commandLine;
 
     @BeforeEach
     @SuppressWarnings("NullAway.Init")
     void setUp() {
         cli = new PlantUMLToPng(mockValidator, mockService, mockWatchService);
+        commandLine = new CommandLine(cli);
     }
 
     @Test
@@ -67,8 +72,8 @@ class PlantUMLToPngTest {
         when(mockValidator.validatePlantUMLFile(testFile.toString())).thenReturn(Optional.of(testFile));
         when(mockService.processFile(testFile)).thenReturn(true);
 
-        // Set the inputFile for the CLI
-        cli.inputFile = testFile.toString();
+        // Parse CLI arguments to set the inputFile
+        commandLine.parseArgs("--file", testFile.toString());
 
         // When
         CliResult result = cli.execute();
@@ -93,8 +98,8 @@ class PlantUMLToPngTest {
         when(mockValidator.validatePlantUMLFile(nonExistentFile.toString()))
             .thenReturn(Optional.empty());
 
-        // Set the inputFile for the CLI
-        cli.inputFile = nonExistentFile.toString();
+        // Parse CLI arguments to set the inputFile
+        commandLine.parseArgs("--file", nonExistentFile.toString());
 
         // When
         CliResult result = cli.execute();
@@ -117,8 +122,8 @@ class PlantUMLToPngTest {
         when(mockValidator.validatePlantUMLFile(invalidFile))
             .thenReturn(Optional.empty());
 
-        // Set the inputFile for the CLI
-        cli.inputFile = invalidFile;
+        // Parse CLI arguments to set the inputFile
+        commandLine.parseArgs("--file", invalidFile);
 
         // When
         CliResult result = cli.execute();
@@ -143,8 +148,8 @@ class PlantUMLToPngTest {
         when(mockValidator.validatePlantUMLFile(testFile.toString())).thenReturn(Optional.of(testFile));
         when(mockService.processFile(testFile)).thenReturn(false);
 
-        // Set the inputFile for the CLI
-        cli.inputFile = testFile.toString();
+        // Parse CLI arguments to set the inputFile
+        commandLine.parseArgs("--file", testFile.toString());
 
         // When
         CliResult result = cli.execute();
@@ -164,8 +169,10 @@ class PlantUMLToPngTest {
     @DisplayName("Should return CliResult.OK when watch option is used successfully")
     void should_returnCliResultOK_when_watchOptionUsedSuccessfully() {
         // Given
-        when(mockWatchService.startWatching()).thenReturn(0);
-        cli.watchOption = true;
+        when(mockWatchService.startWatching(any(Path.class))).thenReturn(0);
+
+        // Parse CLI arguments to set the watch directory
+        commandLine.parseArgs("--watch", tempDir.toString());
 
         // When
         CliResult result = cli.execute();
@@ -176,7 +183,7 @@ class PlantUMLToPngTest {
             .isEqualTo(CliResult.OK);
 
         // Verify watch service was called
-        verify(mockWatchService).startWatching();
+        verify(mockWatchService).startWatching(any(Path.class));
         verifyNoInteractions(mockService, mockValidator);
     }
 
@@ -184,8 +191,10 @@ class PlantUMLToPngTest {
     @DisplayName("Should return CliResult.KO when watch service fails")
     void should_returnCliResultKO_when_watchServiceFails() {
         // Given
-        when(mockWatchService.startWatching()).thenReturn(1);
-        cli.watchOption = true;
+        when(mockWatchService.startWatching(any(Path.class))).thenReturn(1);
+
+        // Parse CLI arguments to set the watch directory
+        commandLine.parseArgs("--watch", tempDir.toString());
 
         // When
         CliResult result = cli.execute();
@@ -196,14 +205,14 @@ class PlantUMLToPngTest {
             .isEqualTo(CliResult.KO);
 
         // Verify watch service was called
-        verify(mockWatchService).startWatching();
+        verify(mockWatchService).startWatching(any(Path.class));
         verifyNoInteractions(mockService, mockValidator);
     }
 
     @Test
     @DisplayName("Should return CliResult.KO when no arguments provided")
     void should_returnCliResultKO_when_noArgumentsProvided() {
-        // Given - no inputFile and no watchOption set
+        // Given - no arguments parsed (no inputFile and no watchDirectory set)
 
         // When
         CliResult result = cli.execute();
@@ -214,6 +223,27 @@ class PlantUMLToPngTest {
             .isEqualTo(CliResult.KO);
 
         // Verify no service interactions
+        verifyNoInteractions(mockService, mockWatchService, mockValidator);
+    }
+
+    @Test
+    @DisplayName("Should return CliResult.KO when watch directory does not exist")
+    void should_returnCliResultKO_when_watchDirectoryDoesNotExist() {
+        // Given
+        String nonExistentDir = "/non/existent/directory";
+
+        // Parse CLI arguments to set the watch directory
+        commandLine.parseArgs("--watch", nonExistentDir);
+
+        // When
+        CliResult result = cli.execute();
+
+        // Then
+        assertThat(result)
+            .as("CLI should return CliResult.KO when watch directory does not exist")
+            .isEqualTo(CliResult.KO);
+
+        // Verify no service interactions (because directory validation failed)
         verifyNoInteractions(mockService, mockWatchService, mockValidator);
     }
 }
