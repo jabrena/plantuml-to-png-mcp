@@ -8,6 +8,8 @@ When you store your `.puml` files in your repository, you need to do an extra st
 
 Using this project, you could simplify this step.
 
+![](./docs/screenshot.png)
+
 ## How to build in local?
 
 ```bash
