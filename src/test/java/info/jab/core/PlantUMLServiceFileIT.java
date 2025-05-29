@@ -23,10 +23,10 @@ import java.io.IOException;
  * eliminating the need for internet connectivity while still testing
  * the full HTTP integration flow.
  */
-class PlantUMLServiceIT {
+class PlantUMLServiceFileIT {
 
     private WireMockServer wireMockServer;
-    private PlantUMLService plantUMLService;
+    private PlantUMLFileService plantUMLService;
     private PlantUMLHttpClient httpClient;
 
     @TempDir
@@ -44,7 +44,7 @@ class PlantUMLServiceIT {
         httpClient = new PlantUMLHttpClient(mockServerUrl);
 
         // Create PlantUMLService with the mocked HTTP client
-        plantUMLService = new PlantUMLService(httpClient);
+        plantUMLService = new PlantUMLFileService(httpClient);
     }
 
     @AfterEach

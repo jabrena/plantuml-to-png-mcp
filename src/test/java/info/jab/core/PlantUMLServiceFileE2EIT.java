@@ -20,9 +20,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Set the environment variable ENABLE_INTEGRATION_TESTS=true to run them.
  */
 @EnabledIfEnvironmentVariable(named = "ENABLE_INTEGRATION_TESTS", matches = "true")
-class PlantUMLServiceE2EIT {
+class PlantUMLServiceFileE2EIT {
 
-    private PlantUMLService plantUMLService;
+    private PlantUMLFileService plantUMLService;
 
     @TempDir
     @SuppressWarnings("NullAway")  // @TempDir fields are automatically initialized by JUnit
@@ -30,7 +30,7 @@ class PlantUMLServiceE2EIT {
 
     @BeforeEach
     void setUp() {
-        plantUMLService = new PlantUMLService();
+        plantUMLService = new PlantUMLFileService();
     }
 
     @Test

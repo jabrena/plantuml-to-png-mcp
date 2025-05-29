@@ -28,10 +28,10 @@ import static org.mockito.Mockito.when;
  * - Using AssertJ for fluent assertions
  * - Mocking HTTP client for better unit testing
  */
-class PlantUMLServiceTest {
+class PlantUMLServiceFileTest {
 
     @SuppressWarnings("NullAway")  // Mock fields are initialized by MockitoAnnotations.openMocks
-    private PlantUMLService plantUMLService;
+    private PlantUMLFileService plantUMLService;
 
     @Mock
     @SuppressWarnings("NullAway")  // Mock fields are initialized by MockitoAnnotations.openMocks
@@ -44,19 +44,19 @@ class PlantUMLServiceTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        plantUMLService = new PlantUMLService(mockHttpClient);
+        plantUMLService = new PlantUMLFileService(mockHttpClient);
     }
 
     @Test
     void shouldCreateServiceWithDefaultUrl() {
-        PlantUMLService service = new PlantUMLService();
+        PlantUMLFileService service = new PlantUMLFileService();
         assertThat(service).isNotNull();
     }
 
     @Test
     void shouldCreateServiceWithCustomUrl() {
         String customUrl = "http://localhost:8080/plantuml";
-        PlantUMLService service = new PlantUMLService(customUrl);
+        PlantUMLFileService service = new PlantUMLFileService(customUrl);
         assertThat(service).isNotNull();
     }
 
@@ -64,7 +64,7 @@ class PlantUMLServiceTest {
     @SuppressWarnings("NullAway")  // Intentionally testing null parameter
     void shouldThrowExceptionWhenServerUrlIsNull() {
         String nullUrl = null;
-        assertThatThrownBy(() -> new PlantUMLService(nullUrl))
+        assertThatThrownBy(() -> new PlantUMLFileService(nullUrl))
             .isInstanceOf(NullPointerException.class)
             .hasMessageContaining("PlantUML server URL cannot be null");
     }
@@ -73,7 +73,7 @@ class PlantUMLServiceTest {
     @SuppressWarnings("NullAway")  // Intentionally testing null parameter
     void shouldThrowExceptionWhenHttpClientIsNull() {
         PlantUMLHttpClient nullClient = null;
-        assertThatThrownBy(() -> new PlantUMLService(nullClient))
+        assertThatThrownBy(() -> new PlantUMLFileService(nullClient))
             .isInstanceOf(NullPointerException.class)
             .hasMessageContaining("HTTP client cannot be null");
     }

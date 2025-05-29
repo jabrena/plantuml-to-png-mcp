@@ -15,7 +15,7 @@ import java.util.Optional;
  * - Converting PlantUML content to PNG format via HTTP service
  * - Managing file I/O operations
  */
-public class PlantUMLService {
+public class PlantUMLFileService {
 
     private static final String DEFAULT_PLANTUML_SERVER = "http://www.plantuml.com/plantuml";
 
@@ -24,7 +24,7 @@ public class PlantUMLService {
     /**
      * Creates a new PlantUMLService with default server URL.
      */
-    public PlantUMLService() {
+    public PlantUMLFileService() {
         this(DEFAULT_PLANTUML_SERVER);
     }
 
@@ -33,7 +33,7 @@ public class PlantUMLService {
      *
      * @param plantUmlServerUrl the PlantUML server URL
      */
-    public PlantUMLService(String plantUmlServerUrl) {
+    public PlantUMLFileService(String plantUmlServerUrl) {
         Objects.requireNonNull(plantUmlServerUrl, "PlantUML server URL cannot be null");
         this.httpClient = new PlantUMLHttpClient(plantUmlServerUrl);
     }
@@ -43,7 +43,7 @@ public class PlantUMLService {
      *
      * @param httpClient the HTTP client to use
      */
-    PlantUMLService(PlantUMLHttpClient httpClient) {
+    PlantUMLFileService(PlantUMLHttpClient httpClient) {
         this.httpClient = Objects.requireNonNull(httpClient, "HTTP client cannot be null");
     }
 

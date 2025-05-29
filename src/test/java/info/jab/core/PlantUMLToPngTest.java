@@ -46,7 +46,7 @@ class PlantUMLToPngTest {
     private Path tempDir;
 
     @Mock
-    private PlantUMLService mockService;
+    private PlantUMLFileService mockService;
 
     @Mock
     private PlantUMLFileValidator mockFileValidator;

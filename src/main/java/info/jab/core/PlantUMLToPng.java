@@ -3,15 +3,16 @@ package info.jab.core;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
-import picocli.CommandLine.ArgGroup;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.concurrent.Callable;
+
+import org.jspecify.annotations.Nullable;
+
 import java.nio.file.Files;
-import java.util.List;
 import java.util.Locale;
-import java.util.stream.Collectors;
+import java.util.Objects;
 
 import com.diogonunes.jcolor.Attribute;
 import static com.diogonunes.jcolor.Ansi.colorize;
@@ -34,41 +35,27 @@ import java.util.Optional;
 )
 public class PlantUMLToPng implements Callable<Integer> {
 
-    /**
-     * Mutually exclusive operation modes for the CLI tool.
-     * Users must specify exactly one of these options.
-     */
-    @ArgGroup(exclusive = true, multiplicity = "1")
-    @SuppressWarnings("NullAway.Init")
-    private OperationMode operationMode;
+    @Option(
+        names = {"-f", "--file"},
+        description = "PlantUML file to convert (.puml extension required)"
+    )
+    @Nullable
+    String inputFile;
 
-    /**
-     * Defines the mutually exclusive operation modes for the CLI.
-     * Either convert a single file or watch for changes, but not both.
-     */
-    static class OperationMode {
-        @Option(
-            names = {"-f", "--file"},
-            description = "PlantUML file to convert (.puml extension required)"
-        )
-        @SuppressWarnings("NullAway.Init")
-        String inputFile;
-
-        @Option(
-            names = {"-w", "--watch"},
-            description = "Watch for changes in the current directory to convert .puml files automatically"
-        )
-        boolean watchOption;
-    }
+    @Option(
+        names = {"-w", "--watch"},
+        description = "Watch for changes in the current directory to convert .puml files automatically"
+    )
+    boolean watchOption;
 
     private final PlantUMLFileValidator fileValidator;
-    private final PlantUMLService plantUMLService;
+    private final PlantUMLFileService plantUMLService;
 
     /**
      * Default constructor for CLI usage.
      */
     public PlantUMLToPng() {
-        this.plantUMLService = new PlantUMLService();
+        this.plantUMLService = new PlantUMLFileService();
         this.fileValidator = new PlantUMLFileValidator();
     }
 
@@ -78,19 +65,23 @@ public class PlantUMLToPng implements Callable<Integer> {
      * @param fileValidator The file validator to use
      * @param plantUMLService The PlantUML service to use
      */
-    public PlantUMLToPng(PlantUMLFileValidator fileValidator, PlantUMLService plantUMLService) {
+    public PlantUMLToPng(PlantUMLFileValidator fileValidator, PlantUMLFileService plantUMLService) {
         this.fileValidator = fileValidator;
         this.plantUMLService = plantUMLService;
     }
 
     @Override
     public Integer call() {
-        if (operationMode.watchOption) {
-            return handleWatchMode();
-        } else {
-            // File option is guaranteed to be present due to ArgGroup multiplicity = "1"
+        if (Objects.nonNull(inputFile)) {
             return handleSingleFileConversion();
         }
+
+        if(watchOption) {
+            return handleWatchMode();
+        }
+
+        System.out.println("Use --help to see available options.");
+        return 1;
     }
 
     private Integer handleSingleFileConversion() {
@@ -105,23 +96,32 @@ public class PlantUMLToPng implements Callable<Integer> {
 
         try {
             var currentDirectory = Path.of(System.getProperty("user.dir"));
-            System.out.println("Recursively scanning for .puml files in: " + currentDirectory);
-            var pumlFiles = listPlantUMLFiles(currentDirectory);
 
-            if (pumlFiles.isEmpty()) {
-                System.out.println("No .puml files found in current directory or subdirectories: " + currentDirectory);
-            } else {
-                System.out.println("Found " + pumlFiles.size() + " .puml file(s):");
-                pumlFiles.forEach(file -> {
-                    var relativePath = currentDirectory.relativize(file);
-                    System.out.println("  - " + relativePath);
-                });
+            while (true) {
+                var pumlFiles = listPlantUMLFiles(currentDirectory);
+
+                if (!pumlFiles.isEmpty()) {
+                    pumlFiles.forEach(file -> {
+                        var relativePath = currentDirectory.relativize(file);
+                        var pngFile = getPngPath(file);
+                        var pngExists = Files.exists(pngFile);
+
+                        //Only print and convert if the PNG file does not exist
+                        if (!pngExists) {
+                            System.out.println("Found: " + relativePath);
+                            convertToPng(file);
+                        }
+                    });
+                }
+
+                // Wait 5 seconds before next iteration
+                Thread.sleep(5000);
             }
 
-            // TODO: Implement file watching functionality
-            System.out.println("Directory watch mode not yet implemented");
-            return 0;
-
+        } catch (InterruptedException e) {
+            System.out.println("Watch mode interrupted. Exiting...");
+            Thread.currentThread().interrupt();
+            return 1;
         } catch (IOException e) {
             System.err.println("Error scanning directory for .puml files: " + e.getMessage());
             return 1;
@@ -134,12 +134,18 @@ public class PlantUMLToPng implements Callable<Integer> {
                 .filter(Files::isRegularFile)
                 .filter(path -> path.toString().toLowerCase(Locale.ENGLISH).endsWith(".puml"))
                 .sorted()
-                .collect(Collectors.toList());
+                .toList();
         }
     }
 
+    private Path getPngPath(Path pumlFile) {
+        var pumlFileName = pumlFile.toString();
+        var pngFileName = pumlFileName.substring(0, pumlFileName.length() - 5) + ".png"; // Replace .puml with .png
+        return Path.of(pngFileName);
+    }
+
     private Optional<Path> validateInputFile() {
-        return fileValidator.validatePlantUMLFile(operationMode.inputFile)
+        return fileValidator.validatePlantUMLFile(inputFile)
             .or(() -> {
                 System.err.println("Error: Invalid PlantUML file. Please check the file path, extension (.puml), and permissions.");
                 return Optional.empty();
