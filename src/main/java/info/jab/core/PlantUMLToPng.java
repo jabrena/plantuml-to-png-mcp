@@ -10,15 +10,12 @@ import java.util.concurrent.Callable;
 
 import org.jspecify.annotations.Nullable;
 
-import java.nio.file.Files;
-import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 
 import com.diogonunes.jcolor.Attribute;
 import static com.diogonunes.jcolor.Ansi.colorize;
 import com.github.lalyos.jfiglet.FigletFont;
-
-import java.util.Optional;
 
 /**
  * PlantUML to PNG CLI Tool
@@ -50,118 +47,78 @@ public class PlantUMLToPng implements Callable<Integer> {
 
     private final PlantUMLFileValidator fileValidator;
     private final PlantUMLFileService plantUMLService;
+    private final PlantUMLWatchService watchService;
 
     /**
      * Default constructor for CLI usage.
      */
     public PlantUMLToPng() {
-        this.plantUMLService = new PlantUMLFileService();
         this.fileValidator = new PlantUMLFileValidator();
+        this.plantUMLService = new PlantUMLFileService();
+        this.watchService = new PlantUMLWatchService(plantUMLService);
     }
 
     /**
      * Constructor for dependency injection (primarily for testing).
      *
-     * @param fileValidator The file validator to use
      * @param plantUMLService The PlantUML service to use
+     * @param watchService The watch service to use
+     * @param fileValidator The file validator to use
      */
-    public PlantUMLToPng(PlantUMLFileValidator fileValidator, PlantUMLFileService plantUMLService) {
+    public PlantUMLToPng(PlantUMLFileValidator fileValidator, PlantUMLFileService plantUMLService, PlantUMLWatchService watchService) {
         this.fileValidator = fileValidator;
         this.plantUMLService = plantUMLService;
+        this.watchService = watchService;
     }
 
     @Override
     public Integer call() {
+        CliResult result = execute();
+        return result.getExitCode();
+    }
+
+    /**
+     * Executes the CLI logic and returns the result.
+     *
+     * @return CliResult indicating success or failure
+     */
+    public CliResult execute() {
         if (Objects.nonNull(inputFile)) {
-            return handleSingleFileConversion();
+            return handleSingleFileConversion(inputFile);
         }
 
-        if(watchOption) {
+        if (watchOption) {
             return handleWatchMode();
         }
 
         System.out.println("Use --help to see available options.");
-        return 1;
+        return CliResult.KO;
     }
 
-    private Integer handleSingleFileConversion() {
-        return validateInputFile()
-            .flatMap(this::convertToPng)
-            .map(success -> success ? 0 : 1)
-            .orElse(1);
-    }
+    private CliResult handleSingleFileConversion(String inputFile) {
+        if (Objects.isNull(inputFile)) {
+            System.err.println("Error: No input file specified. Use -f or --file option.");
+            return CliResult.KO;
+        }
 
-    private Integer handleWatchMode() {
-        System.out.println("Starting watch mode in current directory...");
+        // Validate input file using PlantUMLFileValidator
+        Optional<Path> validatedPath = fileValidator.validatePlantUMLFile(inputFile);
+        if (validatedPath.isEmpty()) {
+            System.err.println("Invalid PlantUML file: " + inputFile);
+            return CliResult.KO;
+        }
 
-        try {
-            var currentDirectory = Path.of(System.getProperty("user.dir"));
-
-            while (true) {
-                var pumlFiles = listPlantUMLFiles(currentDirectory);
-
-                if (!pumlFiles.isEmpty()) {
-                    pumlFiles.forEach(file -> {
-                        var relativePath = currentDirectory.relativize(file);
-                        var pngFile = getPngPath(file);
-                        var pngExists = Files.exists(pngFile);
-
-                        //Only print and convert if the PNG file does not exist
-                        if (!pngExists) {
-                            System.out.println("Found: " + relativePath);
-                            convertToPng(file);
-                        }
-                    });
-                }
-
-                // Wait 5 seconds before next iteration
-                Thread.sleep(5000);
-            }
-
-        } catch (InterruptedException e) {
-            System.out.println("Watch mode interrupted. Exiting...");
-            Thread.currentThread().interrupt();
-            return 1;
-        } catch (IOException e) {
-            System.err.println("Error scanning directory for .puml files: " + e.getMessage());
-            return 1;
+        // Use the validated Path for processing
+        if (plantUMLService.processFile(validatedPath.get())) {
+            return CliResult.OK;
+        } else {
+            return CliResult.KO;
         }
     }
 
-    private java.util.List<Path> listPlantUMLFiles(Path directory) throws IOException {
-        try (var stream = Files.walk(directory)) {
-            return stream
-                .filter(Files::isRegularFile)
-                .filter(path -> path.toString().toLowerCase(Locale.ENGLISH).endsWith(".puml"))
-                .sorted()
-                .toList();
-        }
-    }
-
-    private Path getPngPath(Path pumlFile) {
-        var pumlFileName = pumlFile.toString();
-        var pngFileName = pumlFileName.substring(0, pumlFileName.length() - 5) + ".png"; // Replace .puml with .png
-        return Path.of(pngFileName);
-    }
-
-    private Optional<Path> validateInputFile() {
-        return fileValidator.validatePlantUMLFile(inputFile)
-            .or(() -> {
-                System.err.println("Error: Invalid PlantUML file. Please check the file path, extension (.puml), and permissions.");
-                return Optional.empty();
-            });
-    }
-
-    private Optional<Boolean> convertToPng(Path inputPath) {
-        return plantUMLService.convertToPng(inputPath)
-            .map(outputPath -> {
-                System.out.println("Successfully converted: " + inputPath + " -> " + outputPath);
-                return true;
-            })
-            .or(() -> {
-                System.err.println("Error: Failed to convert PlantUML file. Please check the file format and content.");
-                return Optional.of(false);
-            });
+    private CliResult handleWatchMode() {
+        int watchResult = watchService.startWatching();
+        return (watchResult == 0) ? CliResult.OK : CliResult.KO;
     }
 
     private static void printBanner() {

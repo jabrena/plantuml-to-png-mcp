@@ -3,17 +3,13 @@ package info.jab.core;
 import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import picocli.CommandLine;
-
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -24,11 +20,10 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 /**
- * Unit tests for PlantUMLToPngCli class.
+ * Unit tests for PlantUMLToPng class.
  *
  * This test class demonstrates best practices by:
  * - Using Mockito for dependency mocking (following Rule 8)
- * - Using nested test classes to group related functionality
  * - Following the Given-When-Then structure
  * - Testing both positive and negative scenarios
  * - Using descriptive test method names and @DisplayName annotations
@@ -36,10 +31,10 @@ import static org.mockito.Mockito.when;
  * - Using AssertJ for fluent assertions
  * - Leveraging JSpecify for null safety
  * - Proper verification of mock interactions
+ * - Testing the execute() method that returns CliResult for type-safe assertions
  */
 @NullMarked
 @ExtendWith(MockitoExtension.class)
-@DisplayName("PlantUML to PNG CLI")
 class PlantUMLToPngTest {
 
     @TempDir
@@ -49,151 +44,176 @@ class PlantUMLToPngTest {
     private PlantUMLFileService mockService;
 
     @Mock
-    private PlantUMLFileValidator mockFileValidator;
+    private PlantUMLWatchService mockWatchService;
+
+    @Mock
+    private PlantUMLFileValidator mockValidator;
 
     private PlantUMLToPng cli;
 
     @BeforeEach
     @SuppressWarnings("NullAway.Init")
     void setUp() {
-        cli = new PlantUMLToPng(mockFileValidator, mockService);
+        cli = new PlantUMLToPng(mockValidator, mockService, mockWatchService);
     }
 
-    @Nested
-    @DisplayName("Successful Operations")
-    class SuccessfulOperations {
+    @Test
+    @DisplayName("Should return CliResult.OK when converting valid PlantUML file")
+    void should_returnCliResultOK_when_convertingValidPlantUMLFile() throws IOException {
+        // Given
+        Path testFile = tempDir.resolve("test.puml");
+        TestResourceLoader.loadPlantUMLResource("hello-world.puml", testFile);
 
-        @Test
-        @DisplayName("Should return exit code 0 when converting valid PlantUML file")
-        void should_returnExitCode0_when_convertingValidPlantUMLFile() throws IOException {
-            // Given
-            Path testFile = tempDir.resolve("test.puml");
-            TestResourceLoader.loadPlantUMLResource("hello-world.puml", testFile);
+        when(mockValidator.validatePlantUMLFile(testFile.toString())).thenReturn(Optional.of(testFile));
+        when(mockService.processFile(testFile)).thenReturn(true);
 
-            Path expectedOutputPath = tempDir.resolve("test.png");
-            when(mockFileValidator.validatePlantUMLFile(testFile.toString())).thenReturn(Optional.of(testFile));
-            when(mockService.convertToPng(testFile)).thenReturn(Optional.of(expectedOutputPath));
+        // Set the inputFile for the CLI
+        cli.inputFile = testFile.toString();
 
-            // When
-            CommandLine cmd = new CommandLine(cli);
-            int exitCode = cmd.execute("--file", testFile.toString());
+        // When
+        CliResult result = cli.execute();
 
-            // Then
-            assertThat(exitCode)
-                .as("CLI should return success exit code for valid conversion")
-                .isZero();
+        // Then
+        assertThat(result)
+            .as("CLI should return CliResult.OK for valid conversion")
+            .isEqualTo(CliResult.OK);
 
-            // Verify interactions
-            verify(mockFileValidator).validatePlantUMLFile(testFile.toString());
-            verify(mockService).convertToPng(testFile);
-            verifyNoMoreInteractions(mockService, mockFileValidator);
-        }
-
-        @Test
-        @DisplayName("Should return exit code 0 when help option is requested")
-        void should_returnExitCode0_when_helpOptionRequested() {
-            // Given & When
-            CommandLine cmd = new CommandLine(cli);
-            int exitCode = cmd.execute("--help");
-
-            // Then
-            assertThat(exitCode)
-                .as("CLI should return success exit code for help option")
-                .isZero();
-
-            // Verify no service interactions for help
-            verifyNoInteractions(mockService, mockFileValidator);
-        }
-
-        @Test
-        @DisplayName("Should return exit code 0 when version option is requested")
-        void should_returnExitCode0_when_versionOptionRequested() {
-            // Given & When
-            CommandLine cmd = new CommandLine(cli);
-            int exitCode = cmd.execute("--version");
-
-            // Then
-            assertThat(exitCode)
-                .as("CLI should return success exit code for version option")
-                .isZero();
-
-            // Verify no service interactions for version
-            verifyNoInteractions(mockService, mockFileValidator);
-        }
+        // Verify interactions
+        verify(mockValidator).validatePlantUMLFile(testFile.toString());
+        verify(mockService).processFile(testFile);
+        verifyNoMoreInteractions(mockService);
+        verifyNoInteractions(mockWatchService);
     }
 
-    @Nested
-    @DisplayName("Error Scenarios")
-    class ErrorScenarios {
+    @Test
+    @DisplayName("Should return CliResult.KO when file does not exist")
+    void should_returnCliResultKO_when_fileDoesNotExist() {
+        // Given
+        Path nonExistentFile = tempDir.resolve("nonexistent.puml");
+        when(mockValidator.validatePlantUMLFile(nonExistentFile.toString()))
+            .thenReturn(Optional.empty());
 
-        @Test
-        @DisplayName("Should return exit code 1 when file does not exist")
-        void should_returnExitCode1_when_fileDoesNotExist() {
-            // Given
-            Path nonExistentFile = tempDir.resolve("nonexistent.puml");
-            when(mockFileValidator.validatePlantUMLFile(nonExistentFile.toString()))
-                .thenReturn(Optional.empty());
+        // Set the inputFile for the CLI
+        cli.inputFile = nonExistentFile.toString();
 
-            // When
-            CommandLine cmd = new CommandLine(cli);
-            int exitCode = cmd.execute("--file", nonExistentFile.toString());
+        // When
+        CliResult result = cli.execute();
 
-            // Then
-            assertThat(exitCode)
-                .as("CLI should return error exit code for non-existent file")
-                .isOne();
+        // Then
+        assertThat(result)
+            .as("CLI should return CliResult.KO for non-existent file")
+            .isEqualTo(CliResult.KO);
 
-            // Verify only file validation was called
-            verify(mockFileValidator).validatePlantUMLFile(nonExistentFile.toString());
-            verifyNoInteractions(mockService);
-        }
+        // Verify only file validation was called
+        verify(mockValidator).validatePlantUMLFile(nonExistentFile.toString());
+        verifyNoInteractions(mockService, mockWatchService);
+    }
 
-        @Test
-        @DisplayName("Should return exit code 1 when file has invalid extension")
-        void should_returnExitCode1_when_fileHasInvalidExtension() throws IOException {
-            // Given
-            Path testFile = tempDir.resolve("test.txt");
-            Files.writeString(testFile, "some content");
-            when(mockFileValidator.validatePlantUMLFile(testFile.toString()))
-                .thenReturn(Optional.empty());
+    @Test
+    @DisplayName("Should return CliResult.KO when file has invalid extension")
+    void should_returnCliResultKO_when_fileHasInvalidExtension() {
+        // Given
+        String invalidFile = "test.txt";
+        when(mockValidator.validatePlantUMLFile(invalidFile))
+            .thenReturn(Optional.empty());
 
-            // When
-            CommandLine cmd = new CommandLine(cli);
-            int exitCode = cmd.execute("--file", testFile.toString());
+        // Set the inputFile for the CLI
+        cli.inputFile = invalidFile;
 
-            // Then
-            assertThat(exitCode)
-                .as("CLI should return error exit code for invalid file extension")
-                .isOne();
+        // When
+        CliResult result = cli.execute();
 
-            // Verify only file validation was called
-            verify(mockFileValidator).validatePlantUMLFile(testFile.toString());
-            verifyNoInteractions(mockService);
-        }
+        // Then
+        assertThat(result)
+            .as("CLI should return CliResult.KO for invalid file extension")
+            .isEqualTo(CliResult.KO);
 
-        @Test
-        @DisplayName("Should return exit code 1 when conversion fails")
-        void should_returnExitCode1_when_conversionFails() throws IOException {
-            // Given
-            Path testFile = tempDir.resolve("test.puml");
-            TestResourceLoader.loadPlantUMLResource("hello-world.puml", testFile);
+        // Verify only file validation was called
+        verify(mockValidator).validatePlantUMLFile(invalidFile);
+        verifyNoInteractions(mockService, mockWatchService);
+    }
 
-            when(mockFileValidator.validatePlantUMLFile(testFile.toString())).thenReturn(Optional.of(testFile));
-            when(mockService.convertToPng(testFile)).thenReturn(Optional.empty());
+    @Test
+    @DisplayName("Should return CliResult.KO when conversion fails")
+    void should_returnCliResultKO_when_conversionFails() throws IOException {
+        // Given
+        Path testFile = tempDir.resolve("test.puml");
+        TestResourceLoader.loadPlantUMLResource("hello-world.puml", testFile);
 
-            // When
-            CommandLine cmd = new CommandLine(cli);
-            int exitCode = cmd.execute("--file", testFile.toString());
+        when(mockValidator.validatePlantUMLFile(testFile.toString())).thenReturn(Optional.of(testFile));
+        when(mockService.processFile(testFile)).thenReturn(false);
 
-            // Then
-            assertThat(exitCode)
-                .as("CLI should return error exit code when conversion fails")
-                .isOne();
+        // Set the inputFile for the CLI
+        cli.inputFile = testFile.toString();
 
-            // Verify all methods were called
-            verify(mockFileValidator).validatePlantUMLFile(testFile.toString());
-            verify(mockService).convertToPng(testFile);
-            verifyNoMoreInteractions(mockService, mockFileValidator);
-        }
+        // When
+        CliResult result = cli.execute();
+
+        // Then
+        assertThat(result)
+            .as("CLI should return CliResult.KO for conversion failure")
+            .isEqualTo(CliResult.KO);
+
+        // Verify service interactions
+        verify(mockValidator).validatePlantUMLFile(testFile.toString());
+        verify(mockService).processFile(testFile);
+        verifyNoInteractions(mockWatchService);
+    }
+
+    @Test
+    @DisplayName("Should return CliResult.OK when watch option is used successfully")
+    void should_returnCliResultOK_when_watchOptionUsedSuccessfully() {
+        // Given
+        when(mockWatchService.startWatching()).thenReturn(0);
+        cli.watchOption = true;
+
+        // When
+        CliResult result = cli.execute();
+
+        // Then
+        assertThat(result)
+            .as("CLI should return CliResult.OK from successful watch service")
+            .isEqualTo(CliResult.OK);
+
+        // Verify watch service was called
+        verify(mockWatchService).startWatching();
+        verifyNoInteractions(mockService, mockValidator);
+    }
+
+    @Test
+    @DisplayName("Should return CliResult.KO when watch service fails")
+    void should_returnCliResultKO_when_watchServiceFails() {
+        // Given
+        when(mockWatchService.startWatching()).thenReturn(1);
+        cli.watchOption = true;
+
+        // When
+        CliResult result = cli.execute();
+
+        // Then
+        assertThat(result)
+            .as("CLI should return CliResult.KO when watch service fails")
+            .isEqualTo(CliResult.KO);
+
+        // Verify watch service was called
+        verify(mockWatchService).startWatching();
+        verifyNoInteractions(mockService, mockValidator);
+    }
+
+    @Test
+    @DisplayName("Should return CliResult.KO when no arguments provided")
+    void should_returnCliResultKO_when_noArgumentsProvided() {
+        // Given - no inputFile and no watchOption set
+
+        // When
+        CliResult result = cli.execute();
+
+        // Then
+        assertThat(result)
+            .as("CLI should return CliResult.KO when no arguments provided")
+            .isEqualTo(CliResult.KO);
+
+        // Verify no service interactions
+        verifyNoInteractions(mockService, mockWatchService, mockValidator);
     }
 }
