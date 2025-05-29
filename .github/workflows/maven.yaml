@@ -26,9 +26,8 @@ jobs:
           JAR_FILE="./target/plantuml-to-png-${{ steps.get_version.outputs.VERSION }}.jar"
           echo "Testing CLI with $JAR_FILE"
           java -jar $JAR_FILE --help
-          java -jar $JAR_FILE init --help
           # Run basic init commands and check exit code
-          java -jar $JAR_FILE init --file ./docs/sample-diagram.puml || exit 1
+          java -jar $JAR_FILE --file ./docs/sample-diagram.puml || exit 1
 
       - name: Upload jar
         uses: actions/upload-artifact@v4
