@@ -1,0 +1,142 @@
+@startuml PlantUML_to_PNG_Class_Diagram
+!theme plain
+skinparam classAttributeIconSize 0
+skinparam classFontStyle bold
+skinparam packageStyle rectangle
+
+' Package declarations
+package "info.jab.core" {
+
+    ' Main CLI Class
+    class PlantUMLToPng {
+        - inputFile : String
+        - watchDirectory : String
+        - fileValidator : PlantUMLFileValidator
+        - fileService : PlantUMLFileService
+        - watchService : PlantUMLWatchService
+        --
+        + PlantUMLToPng()
+        + PlantUMLToPng(PlantUMLFileValidator, PlantUMLFileService, PlantUMLWatchService)
+        + call() : Integer
+        + execute() : CliResult
+        - handleSingleFileConversion(String) : CliResult
+        - handleWatchMode(String) : CliResult
+        - printBanner() : void
+        + main(String[]) : void
+    }
+
+    ' Result Enum
+    enum CliResult {
+        OK(0)
+        KO(1)
+        --
+        - exitCode : int
+        --
+        + getExitCode() : int
+    }
+
+    ' File Validator
+    class PlantUMLFileValidator {
+        - PLANTUML_EXTENSION : String = ".puml"
+        --
+        + validatePlantUMLFile(String) : Optional<Path>
+        - isFilePathValid(String) : boolean
+        - isFileExists(Path) : boolean
+        - isRegularFile(Path) : boolean
+        - isReadable(Path) : boolean
+        - hasPlantUMLExtension(Path) : boolean
+    }
+
+    ' File Service
+    class PlantUMLFileService {
+        - DEFAULT_PLANTUML_SERVER : String = "http://www.plantuml.com/plantuml"
+        - httpClient : PlantUMLHttpClient
+        --
+        + PlantUMLFileService()
+        + PlantUMLFileService(String)
+        + PlantUMLFileService(PlantUMLHttpClient)
+        + processFile(Path) : boolean
+        + convertToPng(Path) : Optional<Path>
+        - generateOutputPath(Path) : Path
+        - isValidPlantUMLSyntax(String) : boolean
+        - generatePngData(String) : Optional<byte[]>
+    }
+
+    ' HTTP Client
+    class PlantUMLHttpClient {
+        - HTTP_TIMEOUT : Duration = Duration.ofSeconds(10)
+        - serverUrl : String
+        - httpClient : HttpClient
+        --
+        + PlantUMLHttpClient(String)
+        + generatePngData(String) : Optional<byte[]>
+        - encodePlantUMLContent(String) : String
+        - encodePlantUMLBase64(byte[]) : String
+        - buildPngUrl(String) : String
+        - createHttpRequest(String) : HttpRequest
+        + getServerUrl() : String
+    }
+
+    ' Watch Service
+    class PlantUMLWatchService {
+        - DEFAULT_POLLING_INTERVAL_MS : long = 5000L
+        - PUML_EXTENSION : String = ".puml"
+        - PNG_EXTENSION : String = ".png"
+        - plantUMLService : PlantUMLFileService
+        - pollingIntervalMs : long
+        - stopRequested : boolean
+        --
+        + PlantUMLWatchService(PlantUMLFileService)
+        + PlantUMLWatchService(PlantUMLFileService, long)
+        + startWatching(Path) : Integer
+        + startWatching() : Integer
+        + stopWatching() : void
+        + startWatching(Path, BooleanSupplier) : Integer
+        - processPlantUMLFiles(Path) : void
+        - listPlantUMLFiles(Path) : List<Path>
+        - getPngPath(Path) : Path
+        - convertToPng(Path) : void
+    }
+}
+
+' External Dependencies
+package "External Libraries" {
+    interface Callable<Integer> <<java.util.concurrent>>
+    class CommandLine <<picocli>>
+    class HttpClient <<java.net.http>>
+    class Path <<java.nio.file>>
+    class Optional <<java.util>>
+}
+
+' Relationships
+PlantUMLToPng ..|> Callable : implements
+PlantUMLToPng *-- PlantUMLFileValidator : composition
+PlantUMLToPng *-- PlantUMLFileService : composition
+PlantUMLToPng *-- PlantUMLWatchService : composition
+PlantUMLToPng ..> CliResult : uses
+
+PlantUMLFileService *-- PlantUMLHttpClient : composition
+PlantUMLFileService ..> Path : uses
+PlantUMLFileService ..> Optional : uses
+
+PlantUMLFileValidator ..> Path : uses
+PlantUMLFileValidator ..> Optional : uses
+
+PlantUMLHttpClient *-- HttpClient : composition
+PlantUMLHttpClient ..> Optional : uses
+
+PlantUMLWatchService o-- PlantUMLFileService : aggregation
+PlantUMLWatchService ..> Path : uses
+
+PlantUMLToPng ..> CommandLine : uses
+
+' Notes for important design patterns
+note right of PlantUMLToPng : "Main CLI entry point.\nImplements Command pattern with picocli.\nSupports dependency injection for testing."
+
+note bottom of PlantUMLFileService : "Core business logic.\nHandles file conversion and PNG generation.\nDelegates HTTP operations to HttpClient."
+
+note bottom of PlantUMLHttpClient : "Specialized HTTP client for PlantUML server.\nImplements custom PlantUML encoding algorithm.\nHandles compression and base64 encoding."
+
+note left of PlantUMLWatchService : "File watching service using polling strategy.\nAutomatic conversion of .puml files.\nSupports graceful shutdown."
+
+@enduml

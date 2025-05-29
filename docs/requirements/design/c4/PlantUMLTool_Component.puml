@@ -1,0 +1,50 @@
+@startuml PlantUML to PNG CLI Tool - Component
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title Component diagram for PlantUML to PNG CLI Tool
+
+' External Actors
+Person(Developer, "Developer", "Software developer creating PlantUML diagrams")
+
+' External Systems
+System_Ext(FileSystem, "File System", "Local file system for file storage")
+System_Ext(PlantUMLServer, "PlantUML Server", "HTTP-based PlantUML rendering server")
+
+' Container Boundary
+Container_Boundary(PlantUMLTool, "PlantUML to PNG CLI Tool") {
+    ' CLI Layer
+    Component(PlantUMLToPng, "PlantUMLToPng", "PicoCLI Command Class", "Main CLI class with @Command annotations for argument parsing and execution orchestration")
+
+    Component(CliResult, "CliResult", "Enum", "Result enumeration defining exit codes (OK=0, KO=1)")
+
+    ' Validation Layer
+    Component(PlantUMLFileValidator, "PlantUMLFileValidator", "Validator Component", "Validates PlantUML file paths, existence, readability, and .puml extension")
+
+    ' Core Processing Layer
+    Component(PlantUMLFileService, "PlantUMLFileService", "Service Component", "Core business logic for PlantUML processing and PNG generation coordination")
+
+    ' HTTP Communication Layer
+    Component(PlantUMLHttpClient, "PlantUMLHttpClient", "HTTP Client", "HTTP client for PlantUML server with custom encoding and timeout handling")
+
+    ' Watch Mode Layer
+    Component(PlantUMLWatchService, "PlantUMLWatchService", "Watch Service", "Polling-based directory monitor for automatic .puml to .png conversion")
+}
+
+' External Relationships
+Rel(Developer, PlantUMLToPng, "Executes CLI with args", "Command Line")
+Rel(PlantUMLHttpClient, PlantUMLServer, "POST encoded content", "HTTPS")
+Rel(PlantUMLFileService, FileSystem, "Read .puml / Write .png", "File I/O")
+Rel(PlantUMLWatchService, FileSystem, "Directory scanning", "File System API")
+Rel(PlantUMLFileValidator, FileSystem, "File checks", "File System API")
+
+' Internal Component Relationships
+Rel(PlantUMLToPng, PlantUMLFileValidator, "validatePlantUMLFile()", "Method Call")
+Rel(PlantUMLToPng, PlantUMLFileService, "processFile()", "Method Call")
+Rel(PlantUMLToPng, PlantUMLWatchService, "startWatching()", "Method Call")
+Rel(PlantUMLToPng, CliResult, "Returns exit codes", "Enum Usage")
+
+Rel(PlantUMLFileService, PlantUMLHttpClient, "generatePngData()", "Method Call")
+Rel(PlantUMLWatchService, PlantUMLFileService, "processFile()", "Method Call")
+
+SHOW_LEGEND()
+@enduml
