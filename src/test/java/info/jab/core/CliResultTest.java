@@ -11,21 +11,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 class CliResultTest {
 
     @Test
-    @DisplayName("Should have OK with exit code 1")
-    void should_haveOKWithExitCode1() {
+    @DisplayName("Should have OK with exit code 0")
+    void should_haveOKWithExitCode0() {
         // When & Then
         assertThat(CliResult.OK.getExitCode())
-            .as("CliResult.OK should have exit code 1")
-            .isOne();
+            .as("CliResult.OK should have exit code 0")
+            .isZero();
     }
 
     @Test
-    @DisplayName("Should have KO with exit code 0")
-    void should_haveKOWithExitCode0() {
+    @DisplayName("Should have KO with exit code 1")
+    void should_haveKOWithExitCode1() {
         // When & Then
         assertThat(CliResult.KO.getExitCode())
-            .as("CliResult.KO should have exit code 0")
-            .isZero();
+            .as("CliResult.KO should have exit code 1")
+            .isOne();
     }
 
     @Test

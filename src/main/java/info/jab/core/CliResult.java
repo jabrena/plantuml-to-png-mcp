@@ -9,12 +9,12 @@ public enum CliResult {
     /**
      * Successful operation.
      */
-    OK(1),
+    OK(0),
 
     /**
      * Failed operation.
      */
-    KO(0);
+    KO(1);
 
     private final int exitCode;
 
