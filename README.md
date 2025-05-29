@@ -1,6 +1,10 @@
-# Plantuml to PNG
+# Plantuml to PNG CLI
 
-![](./docs/sample-diagram.png)
+## Motivation
+
+When you store your `.puml` files in your repository, you need to do an extra step in order to generate the image in `.png` format using a Third party service.
+
+Using this project, you could simplify this step.
 
 ## How to build in local?
 
@@ -35,6 +39,5 @@ java -jar target/plantuml-to-png-0.1.0.jar --file ./docs/sample-diagram.puml
 - https://plantuml.com/es/smetana02
 - https://www.jbang.dev/appstore/
 - ...
-- https://github.com/jabrena/cursor-rules-methodology
 - https://github.com/jabrena/cursor-rules-agile
 - https://github.com/jabrena/cursor-rules-java

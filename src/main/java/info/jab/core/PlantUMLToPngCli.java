@@ -32,7 +32,6 @@ public class PlantUMLToPngCli implements Callable<Integer> {
     private String inputFile;
 
     private final PlantUMLFileValidator fileValidator;
-    private final GraphvizValidator graphvizValidator;
     private final PlantUMLService plantUMLService;
 
     /**
@@ -40,7 +39,6 @@ public class PlantUMLToPngCli implements Callable<Integer> {
      */
     public PlantUMLToPngCli() {
         this.plantUMLService = new PlantUMLService();
-        this.graphvizValidator = new GraphvizValidator();
         this.fileValidator = new PlantUMLFileValidator();
     }
 
@@ -48,30 +46,19 @@ public class PlantUMLToPngCli implements Callable<Integer> {
      * Constructor for dependency injection (primarily for testing).
      *
      * @param fileValidator The file validator to use
-     * @param graphvizValidator The Graphviz validator to use
      * @param plantUMLService The PlantUML service to use
      */
-    public PlantUMLToPngCli(PlantUMLFileValidator fileValidator, GraphvizValidator graphvizValidator, PlantUMLService plantUMLService) {
+    public PlantUMLToPngCli(PlantUMLFileValidator fileValidator, PlantUMLService plantUMLService) {
         this.fileValidator = fileValidator;
-        this.graphvizValidator = graphvizValidator;
         this.plantUMLService = plantUMLService;
     }
 
     @Override
     public Integer call() {
-        return validateGraphviz()
-            .flatMap(_ -> validateInputFile())
+        return validateInputFile()
             .flatMap(this::convertToPng)
             .map(success -> success ? 0 : 1)
             .orElse(1);
-    }
-
-    private Optional<Boolean> validateGraphviz() {
-        if (graphvizValidator.isGraphvizAvailable()) {
-            return Optional.of(true);
-        }
-        System.err.println("Error: Graphviz is not available. Please install Graphviz to use this tool.");
-        return Optional.empty();
     }
 
     private Optional<Path> validateInputFile() {

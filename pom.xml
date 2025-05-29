@@ -15,7 +15,6 @@
 
     <!-- Dependencies -->
     <picocli.version>4.7.7</picocli.version>
-    <plantuml.version>1.2023.13</plantuml.version>
     <jspecify.version>1.0.0</jspecify.version>
 
     <!-- Test dependencies -->
@@ -66,13 +65,6 @@
       <groupId>info.picocli</groupId>
       <artifactId>picocli</artifactId>
       <version>${picocli.version}</version>
-    </dependency>
-
-    <!-- PlantUML Library -->
-    <dependency>
-      <groupId>net.sourceforge.plantuml</groupId>
-      <artifactId>plantuml</artifactId>
-      <version>${plantuml.version}</version>
     </dependency>
 
     <!-- Null Safety Annotations -->
