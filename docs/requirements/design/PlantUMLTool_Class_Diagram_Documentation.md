@@ -16,15 +16,18 @@ The PlantUML to PNG CLI Tool follows a **layered architecture** with clear separ
 
 ### **Service Layer**
 - **PlantUMLService**: Core business logic for PlantUML to PNG conversion
-- Encapsulates file processing, syntax validation, and PNG generation
+- Encapsulates file processing, syntax validation, and coordinates with HTTP client for PNG generation
+
+### **HTTP Communication Layer**
+- **PlantUMLHttpClient**: Handles HTTP communication with PlantUML servers
+- Implements custom PlantUML encoding and manages HTTP requests/responses
 
 ### **Validation Layer**
 - **PlantUMLFileValidator**: Validates input files (existence, readability, extension)
-- **GraphvizValidator**: Checks system dependencies (Graphviz availability)
 
 ### **External Dependencies**
 - PicoCLI framework for CLI functionality
-- PlantUML library for diagram conversion
+- Java HTTP Client for server communication
 - Java NIO for file operations
 - Optional pattern for null safety
 
@@ -40,13 +43,18 @@ The PlantUML to PNG CLI Tool follows a **layered architecture** with clear separ
 - **Purpose**: Encapsulates conversion operations and file management
 - **Benefits**: Testable, reusable business logic independent of CLI concerns
 
-### 3. **Validator Pattern**
-- **Implementation**: Separate validator classes for different concerns
-- **Purpose**: Input validation and system dependency checking
+### 3. **HTTP Client Pattern**
+- **Implementation**: `PlantUMLHttpClient` as dedicated HTTP communication layer
+- **Purpose**: Handles all server communication and PlantUML-specific encoding
+- **Benefits**: Separation of network concerns, reusable HTTP logic
+
+### 4. **Validator Pattern**
+- **Implementation**: `PlantUMLFileValidator` for input validation
+- **Purpose**: Input validation and file system checks
 - **Benefits**: Single responsibility, reusable validation logic
 
-### 4. **Dependency Injection**
-- **Implementation**: Constructor injection in `PlantUMLToPngCli`
+### 5. **Dependency Injection**
+- **Implementation**: Constructor injection in `PlantUMLToPngCli` and `PlantUMLService`
 - **Purpose**: Enables testing with mock dependencies
 - **Benefits**: Loose coupling, improved testability
 
@@ -56,13 +64,12 @@ The PlantUML to PNG CLI Tool follows a **layered architecture** with clear separ
 **Role**: Command-line interface orchestrator
 **Key Responsibilities:**
 - Parse command-line arguments using PicoCLI annotations
-- Coordinate validation workflow (Graphviz → File → Conversion)
+- Coordinate validation workflow (File → Conversion)
 - Handle user feedback and error reporting
 - Manage application exit codes
 
 **Key Methods:**
 - `call()`: Main execution method implementing Callable interface
-- `validateGraphviz()`: Ensures Graphviz dependency is available
 - `validateInputFile()`: Validates input file using file validator
 - `convertToPng()`: Orchestrates conversion using service layer
 
@@ -71,14 +78,29 @@ The PlantUML to PNG CLI Tool follows a **layered architecture** with clear separ
 **Key Responsibilities:**
 - Read and validate PlantUML file content
 - Perform syntax validation (check for @startuml/@enduml tags)
-- Generate PNG data using PlantUML library
+- Coordinate with HTTP client for PNG generation
 - Create output files with proper naming convention
 
 **Key Methods:**
 - `convertToPng()`: Main conversion workflow
 - `isValidPlantUMLSyntax()`: Basic PlantUML syntax validation
-- `generatePngData()`: PNG generation using PlantUML library
+- `generatePngData()`: PNG generation via HTTP client delegation
 - `createOutputPath()`: Output file path generation logic
+
+### PlantUMLHttpClient
+**Role**: HTTP communication specialist
+**Key Responsibilities:**
+- Manage HTTP communication with PlantUML servers
+- Implement custom PlantUML content encoding (deflate + custom base64)
+- Handle HTTP request/response lifecycle
+- Provide clean API for PNG data generation
+
+**Key Methods:**
+- `generatePngData()`: Main HTTP workflow for PNG generation
+- `encodePlantUMLContent()`: PlantUML-specific content encoding
+- `encodePlantUMLBase64()`: Custom base64 encoding for PlantUML
+- `buildPngUrl()`: URL construction for PNG requests
+- `createHttpRequest()`: HTTP request configuration
 
 ### PlantUMLFileValidator
 **Role**: Input file validation specialist
@@ -93,25 +115,16 @@ The PlantUML to PNG CLI Tool follows a **layered architecture** with clear separ
 - `isFileExists()`, `isRegularFile()`, `isReadable()`: File system checks
 - `hasPlantUMLExtension()`: Extension validation
 
-### GraphvizValidator
-**Role**: System dependency checker
-**Key Responsibilities:**
-- Check Graphviz installation and availability
-- Validate that 'dot' command is accessible
-- Provide system environment validation
-
-**Key Methods:**
-- `isGraphvizAvailable()`: Execute 'dot -V' to check Graphviz
-
 ## Relationship Analysis
 
 ### **Composition Relationships**
-- `PlantUMLToPngCli` **uses** `PlantUMLFileValidator`, `GraphvizValidator`, `PlantUMLService`
-- Strong ownership - CLI class manages lifecycle of validator and service instances
+- `PlantUMLToPngCli` **uses** `PlantUMLFileValidator`, `PlantUMLService`
+- `PlantUMLService` **uses** `PlantUMLHttpClient`
+- Strong ownership - classes manage lifecycle of their dependencies
 
 ### **Dependency Relationships**
 - `PlantUMLToPngCli` **depends on** PicoCLI framework for annotations and execution
-- `PlantUMLService` **depends on** PlantUML library for conversion functionality
+- `PlantUMLHttpClient` **depends on** Java HTTP Client for network communication
 - All classes **use** Java NIO Path and Optional for type safety
 
 ### **Implementation Relationships**
@@ -119,25 +132,35 @@ The PlantUML to PNG CLI Tool follows a **layered architecture** with clear separ
 
 ## Key Architectural Decisions
 
-### 1. **Separation of Concerns**
-- **Decision**: Separate validation, service, and CLI concerns into distinct classes
-- **Rationale**: Improves testability, maintainability, and follows single responsibility principle
-- **Impact**: Clean, focused classes with clear responsibilities
+### 1. **HTTP-Based Architecture**
+- **Decision**: Use HTTP client to communicate with remote PlantUML servers instead of local PlantUML library
+- **Rationale**: Reduces application size, eliminates local dependencies, leverages PlantUML.com infrastructure
+- **Impact**: Requires network connectivity, but provides better maintainability and reduced complexity
 
-### 2. **Optional Pattern Usage**
+### 2. **Custom PlantUML Encoding**
+- **Decision**: Implement custom base64 encoding specific to PlantUML protocol
+- **Rationale**: PlantUML servers require specific encoding format different from standard base64
+- **Impact**: Ensures compatibility with PlantUML server infrastructure
+
+### 3. **Separation of HTTP Concerns**
+- **Decision**: Create dedicated `PlantUMLHttpClient` class for all HTTP operations
+- **Rationale**: Single responsibility principle, testability, reusability
+- **Impact**: Clean separation allows independent testing and future enhancements
+
+### 4. **Elimination of Local Dependencies**
+- **Decision**: Remove Graphviz validation and local PlantUML library dependencies
+- **Rationale**: Simplifies deployment, reduces application size, eliminates system dependency checks
+- **Impact**: Cleaner architecture but requires network connectivity
+
+### 5. **Optional Pattern Usage**
 - **Decision**: Use Optional<T> for method return types that may fail
 - **Rationale**: Explicit null safety, functional programming style
 - **Impact**: Reduces null pointer exceptions, improves error handling
 
-### 3. **Constructor Injection**
+### 6. **Constructor Injection**
 - **Decision**: Provide constructor for dependency injection alongside default constructor
 - **Rationale**: Enables testing with mock objects while maintaining simple CLI usage
 - **Impact**: Improved testability without compromising usability
-
-### 4. **Package-Private Methods**
-- **Decision**: `generatePngData()` method is package-private in PlantUMLService
-- **Rationale**: Allows testing while not exposing internal implementation details
-- **Impact**: Better encapsulation with testing accessibility
 
 ## External Dependencies Integration
 
@@ -146,15 +169,31 @@ The PlantUML to PNG CLI Tool follows a **layered architecture** with clear separ
 - **Purpose**: Command-line argument parsing and help generation
 - **Benefits**: Robust CLI framework with minimal boilerplate
 
-### PlantUML Library (net.sourceforge.plantuml:plantuml:1.2023.13)
-- **Integration Point**: PlantUMLService.generatePngData() method
-- **Purpose**: Core diagram conversion functionality
-- **Benefits**: Mature, stable library with Graphviz integration
+### Java HTTP Client (java.net.http)
+- **Integration Point**: PlantUMLHttpClient for server communication
+- **Purpose**: HTTP communication with PlantUML servers
+- **Benefits**: Built-in Java 11+ feature, no external dependencies
 
 ### Java NIO (java.nio.file.Path)
 - **Integration Point**: File operations across all classes
 - **Purpose**: Modern file system operations
 - **Benefits**: Better error handling, cross-platform compatibility
+
+## HTTP Communication Details
+
+### PlantUML Encoding Process
+1. **Content Preparation**: Raw PlantUML text content
+2. **UTF-8 Encoding**: Convert to byte array
+3. **Deflate Compression**: Apply compression for size reduction
+4. **Custom Base64**: Apply PlantUML-specific base64 encoding
+5. **URL Construction**: Build request URL with encoded content
+
+### HTTP Request Flow
+1. **Encoding**: PlantUML content → Custom encoded string
+2. **URL Building**: Server URL + "/png/" + encoded content
+3. **Request Creation**: GET request with timeout configuration
+4. **Response Processing**: Extract PNG data from response body
+5. **Validation**: Check status code and response size
 
 ## Testing Considerations
 
@@ -162,32 +201,47 @@ The PlantUML to PNG CLI Tool follows a **layered architecture** with clear separ
 1. **Constructor Injection**: Enables mock injection for unit testing
 2. **Package-Private Methods**: Allows testing of internal logic
 3. **Optional Return Types**: Clear success/failure semantics for testing
-4. **Separated Concerns**: Each class can be tested independently
+4. **Separated HTTP Layer**: HTTP communication can be mocked independently
+5. **Pure Validation Logic**: File validation can be tested in isolation
 
 ### Testing Strategy Alignment
-- **Unit Testing**: Each class can be tested in isolation
-- **Integration Testing**: CLI class can be tested with real dependencies
+- **Unit Testing**: Each class can be tested independently with mocks
+- **Integration Testing**: HTTP client can be tested with test servers
 - **End-to-End Testing**: Complete workflow testing via main() method
 
 ## Future Extension Points
 
 ### Potential Enhancements
 1. **Batch Processing**: Add support for multiple file conversion
-2. **Configuration**: Add configuration file support for advanced options
-3. **Output Formats**: Extend beyond PNG to other formats
-4. **Validation**: Enhanced PlantUML syntax validation
+2. **Configuration**: Add configuration file support for custom server URLs
+3. **Output Formats**: Extend beyond PNG to other formats (SVG, PDF)
+4. **Caching**: Add local caching of converted diagrams
+5. **Offline Mode**: Support for local PlantUML processing when available
 
 ### Architecture Flexibility
 - **Service Layer**: Can be extended with additional conversion methods
+- **HTTP Client**: Can support additional PlantUML server endpoints
 - **Validator Pattern**: New validators can be added for different validation concerns
 - **Dependency Injection**: New dependencies can be easily integrated
+
+## Error Handling Strategy
+
+### Network Resilience
+- **Timeouts**: Configurable HTTP timeouts for server communication
+- **Graceful Degradation**: Clear error messages for network failures
+- **Optional Pattern**: Non-throwing methods with Optional returns
+
+### File System Robustness
+- **Validation**: Comprehensive file validation before processing
+- **Error Propagation**: Clear error messages for file system issues
+- **Path Safety**: Modern NIO path handling for cross-platform compatibility
 
 ## Maintenance Guidelines
 
 ### Code Quality
 - All classes follow single responsibility principle
-- Clear method naming and documentation
-- Consistent error handling patterns
+- Clear method naming and comprehensive documentation
+- Consistent error handling patterns using Optional
 - Proper encapsulation with appropriate access modifiers
 
 ### Evolution Strategy
@@ -205,4 +259,4 @@ The PlantUML to PNG CLI Tool follows a **layered architecture** with clear separ
 
 ---
 
-*This class diagram represents the current state of the PlantUML to PNG CLI Tool architecture as of December 2024. The design emphasizes simplicity, testability, and clear separation of concerns while maintaining the flexibility for future enhancements.*
+*This class diagram represents the current state of the PlantUML to PNG CLI Tool architecture as of December 2024. The design emphasizes HTTP-based communication, clear separation of concerns, and maintainability while eliminating local system dependencies.*

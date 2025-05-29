@@ -4,8 +4,14 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.concurrent.Callable;
+
+import com.diogonunes.jcolor.Attribute;
+import static com.diogonunes.jcolor.Ansi.colorize;
+import com.github.lalyos.jfiglet.FigletFont;
+
 import java.util.Optional;
 
 /**
@@ -32,7 +38,6 @@ public class PlantUMLToPngCli implements Callable<Integer> {
     private String inputFile;
 
     private final PlantUMLFileValidator fileValidator;
-    private final GraphvizValidator graphvizValidator;
     private final PlantUMLService plantUMLService;
 
     /**
@@ -40,7 +45,6 @@ public class PlantUMLToPngCli implements Callable<Integer> {
      */
     public PlantUMLToPngCli() {
         this.plantUMLService = new PlantUMLService();
-        this.graphvizValidator = new GraphvizValidator();
         this.fileValidator = new PlantUMLFileValidator();
     }
 
@@ -48,30 +52,19 @@ public class PlantUMLToPngCli implements Callable<Integer> {
      * Constructor for dependency injection (primarily for testing).
      *
      * @param fileValidator The file validator to use
-     * @param graphvizValidator The Graphviz validator to use
      * @param plantUMLService The PlantUML service to use
      */
-    public PlantUMLToPngCli(PlantUMLFileValidator fileValidator, GraphvizValidator graphvizValidator, PlantUMLService plantUMLService) {
+    public PlantUMLToPngCli(PlantUMLFileValidator fileValidator, PlantUMLService plantUMLService) {
         this.fileValidator = fileValidator;
-        this.graphvizValidator = graphvizValidator;
         this.plantUMLService = plantUMLService;
     }
 
     @Override
     public Integer call() {
-        return validateGraphviz()
-            .flatMap(_ -> validateInputFile())
+        return validateInputFile()
             .flatMap(this::convertToPng)
             .map(success -> success ? 0 : 1)
             .orElse(1);
-    }
-
-    private Optional<Boolean> validateGraphviz() {
-        if (graphvizValidator.isGraphvizAvailable()) {
-            return Optional.of(true);
-        }
-        System.err.println("Error: Graphviz is not available. Please install Graphviz to use this tool.");
-        return Optional.empty();
     }
 
     private Optional<Path> validateInputFile() {
@@ -94,12 +87,23 @@ public class PlantUMLToPngCli implements Callable<Integer> {
             });
     }
 
+    private static void printBanner() {
+        try {
+            System.out.println();
+            String asciiArt = FigletFont.convertOneLine("PlantUML to PNG CLI");
+            System.out.println(colorize(asciiArt, Attribute.GREEN_TEXT()));
+        } catch (IOException e) {
+            System.out.println("Error printing banner: " + e.getMessage());
+        }
+    }
+
     /**
      * Main method for CLI execution.
      *
      * @param args Command line arguments
      */
     public static void main(String[] args) {
+        printBanner();
         PlantUMLToPngCli cli = new PlantUMLToPngCli();
         int exitCode = new CommandLine(cli).execute(args);
         System.exit(exitCode);

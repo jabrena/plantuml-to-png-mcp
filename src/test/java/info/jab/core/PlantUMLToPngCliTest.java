@@ -17,9 +17,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for PlantUMLToPngCli class.
@@ -47,9 +49,6 @@ class PlantUMLToPngCliTest {
     private PlantUMLService mockService;
 
     @Mock
-    private GraphvizValidator mockGraphvizValidator;
-
-    @Mock
     private PlantUMLFileValidator mockFileValidator;
 
     private PlantUMLToPngCli cli;
@@ -57,7 +56,7 @@ class PlantUMLToPngCliTest {
     @BeforeEach
     @SuppressWarnings("NullAway.Init")
     void setUp() {
-        cli = new PlantUMLToPngCli(mockFileValidator, mockGraphvizValidator, mockService);
+        cli = new PlantUMLToPngCli(mockFileValidator, mockService);
     }
 
     @Nested
@@ -69,11 +68,10 @@ class PlantUMLToPngCliTest {
         void should_returnExitCode0_when_convertingValidPlantUMLFile() throws IOException {
             // Given
             Path testFile = tempDir.resolve("test.puml");
-            TestResourceLoader.loadPlantUMLResource("valid-simple.puml", testFile);
+            TestResourceLoader.loadPlantUMLResource("hello-world.puml", testFile);
 
             Path expectedOutputPath = tempDir.resolve("test.png");
             when(mockFileValidator.validatePlantUMLFile(testFile.toString())).thenReturn(Optional.of(testFile));
-            when(mockGraphvizValidator.isGraphvizAvailable()).thenReturn(true);
             when(mockService.convertToPng(testFile)).thenReturn(Optional.of(expectedOutputPath));
 
             // When
@@ -87,9 +85,8 @@ class PlantUMLToPngCliTest {
 
             // Verify interactions
             verify(mockFileValidator).validatePlantUMLFile(testFile.toString());
-            verify(mockGraphvizValidator).isGraphvizAvailable();
             verify(mockService).convertToPng(testFile);
-            verifyNoMoreInteractions(mockService, mockGraphvizValidator, mockFileValidator);
+            verifyNoMoreInteractions(mockService, mockFileValidator);
         }
 
         @Test
@@ -105,7 +102,7 @@ class PlantUMLToPngCliTest {
                 .isZero();
 
             // Verify no service interactions for help
-            verifyNoInteractions(mockService, mockGraphvizValidator, mockFileValidator);
+            verifyNoInteractions(mockService, mockFileValidator);
         }
 
         @Test
@@ -121,7 +118,7 @@ class PlantUMLToPngCliTest {
                 .isZero();
 
             // Verify no service interactions for version
-            verifyNoInteractions(mockService, mockGraphvizValidator, mockFileValidator);
+            verifyNoInteractions(mockService, mockFileValidator);
         }
     }
 
@@ -134,7 +131,6 @@ class PlantUMLToPngCliTest {
         void should_returnExitCode1_when_fileDoesNotExist() {
             // Given
             Path nonExistentFile = tempDir.resolve("nonexistent.puml");
-            when(mockGraphvizValidator.isGraphvizAvailable()).thenReturn(true);
             when(mockFileValidator.validatePlantUMLFile(nonExistentFile.toString()))
                 .thenReturn(Optional.empty());
 
@@ -147,8 +143,7 @@ class PlantUMLToPngCliTest {
                 .as("CLI should return error exit code for non-existent file")
                 .isOne();
 
-            // Verify both Graphviz and file validation were called
-            verify(mockGraphvizValidator).isGraphvizAvailable();
+            // Verify only file validation was called
             verify(mockFileValidator).validatePlantUMLFile(nonExistentFile.toString());
             verifyNoInteractions(mockService);
         }
@@ -159,7 +154,6 @@ class PlantUMLToPngCliTest {
             // Given
             Path testFile = tempDir.resolve("test.txt");
             Files.writeString(testFile, "some content");
-            when(mockGraphvizValidator.isGraphvizAvailable()).thenReturn(true);
             when(mockFileValidator.validatePlantUMLFile(testFile.toString()))
                 .thenReturn(Optional.empty());
 
@@ -172,34 +166,9 @@ class PlantUMLToPngCliTest {
                 .as("CLI should return error exit code for invalid file extension")
                 .isOne();
 
-            // Verify both Graphviz and file validation were called
-            verify(mockGraphvizValidator).isGraphvizAvailable();
+            // Verify only file validation was called
             verify(mockFileValidator).validatePlantUMLFile(testFile.toString());
             verifyNoInteractions(mockService);
-        }
-
-        @Test
-        @DisplayName("Should return exit code 1 when Graphviz is not available")
-        void should_returnExitCode1_when_graphvizNotAvailable() throws IOException {
-            // Given
-            Path testFile = tempDir.resolve("test.puml");
-            TestResourceLoader.loadPlantUMLResource("valid-simple.puml", testFile);
-
-            when(mockGraphvizValidator.isGraphvizAvailable()).thenReturn(false);
-            // Note: file validator should not be called when Graphviz is unavailable
-
-            // When
-            CommandLine cmd = new CommandLine(cli);
-            int exitCode = cmd.execute("--file", testFile.toString());
-
-            // Then
-            assertThat(exitCode)
-                .as("CLI should return error exit code when Graphviz is unavailable")
-                .isOne();
-
-            // Verify only Graphviz check was called (early return)
-            verify(mockGraphvizValidator).isGraphvizAvailable();
-            verifyNoInteractions(mockFileValidator, mockService);
         }
 
         @Test
@@ -207,10 +176,9 @@ class PlantUMLToPngCliTest {
         void should_returnExitCode1_when_conversionFails() throws IOException {
             // Given
             Path testFile = tempDir.resolve("test.puml");
-            TestResourceLoader.loadPlantUMLResource("valid-simple.puml", testFile);
+            TestResourceLoader.loadPlantUMLResource("hello-world.puml", testFile);
 
             when(mockFileValidator.validatePlantUMLFile(testFile.toString())).thenReturn(Optional.of(testFile));
-            when(mockGraphvizValidator.isGraphvizAvailable()).thenReturn(true);
             when(mockService.convertToPng(testFile)).thenReturn(Optional.empty());
 
             // When
@@ -224,9 +192,8 @@ class PlantUMLToPngCliTest {
 
             // Verify all methods were called
             verify(mockFileValidator).validatePlantUMLFile(testFile.toString());
-            verify(mockGraphvizValidator).isGraphvizAvailable();
             verify(mockService).convertToPng(testFile);
-            verifyNoMoreInteractions(mockService, mockGraphvizValidator, mockFileValidator);
+            verifyNoMoreInteractions(mockService, mockFileValidator);
         }
     }
 }

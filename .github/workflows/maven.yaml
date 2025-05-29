@@ -14,7 +14,24 @@ jobs:
         with:
           distribution: 'graalvm' # See 'Supported distributions' for available options
           java-version: '24'
-      - name: Install Graphviz
-        run: sudo apt-get -y install graphviz
       - name: Maven build
         run: ./mvnw --batch-mode --no-transfer-progress verify --file pom.xml
+
+      - name: Get Maven project version
+        id: get_version
+        run: echo "VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_OUTPUT
+
+      - name: Test CLI commands
+        run: |
+          JAR_FILE="./target/plantuml-to-png-${{ steps.get_version.outputs.VERSION }}.jar"
+          echo "Testing CLI with $JAR_FILE"
+          java -jar $JAR_FILE --help
+          # Run basic init commands and check exit code
+          java -jar $JAR_FILE --file ./docs/sample-diagram.puml || exit 1
+
+      - name: Upload jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: plantuml-to-png-${{ steps.get_version.outputs.VERSION }}.jar
+          path: |
+            ./target/plantuml-to-png-${{ steps.get_version.outputs.VERSION }}.jar

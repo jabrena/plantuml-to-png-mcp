@@ -1,11 +1,5 @@
 package info.jab.core;
 
-import net.sourceforge.plantuml.FileFormat;
-import net.sourceforge.plantuml.FileFormatOption;
-import net.sourceforge.plantuml.SourceStringReader;
-import net.sourceforge.plantuml.core.DiagramDescription;
-
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -18,10 +12,40 @@ import java.util.Optional;
  *
  * This class encapsulates the core business logic for:
  * - Validating PlantUML file syntax
- * - Converting PlantUML content to PNG format
+ * - Converting PlantUML content to PNG format via HTTP service
  * - Managing file I/O operations
  */
 public class PlantUMLService {
+
+    private static final String DEFAULT_PLANTUML_SERVER = "http://www.plantuml.com/plantuml";
+
+    private final PlantUMLHttpClient httpClient;
+
+    /**
+     * Creates a new PlantUMLService with default server URL.
+     */
+    public PlantUMLService() {
+        this(DEFAULT_PLANTUML_SERVER);
+    }
+
+    /**
+     * Creates a new PlantUMLService with custom server URL.
+     *
+     * @param plantUmlServerUrl the PlantUML server URL
+     */
+    public PlantUMLService(String plantUmlServerUrl) {
+        Objects.requireNonNull(plantUmlServerUrl, "PlantUML server URL cannot be null");
+        this.httpClient = new PlantUMLHttpClient(plantUmlServerUrl);
+    }
+
+    /**
+     * Package-private constructor for testing with custom HTTP client.
+     *
+     * @param httpClient the HTTP client to use
+     */
+    PlantUMLService(PlantUMLHttpClient httpClient) {
+        this.httpClient = Objects.requireNonNull(httpClient, "HTTP client cannot be null");
+    }
 
     /**
      * Converts a PlantUML file to PNG format.
@@ -39,7 +63,7 @@ public class PlantUMLService {
                 return Optional.empty();
             }
 
-            // Generate PNG content
+            // Generate PNG content via HTTP
             Optional<byte[]> pngDataOpt = generatePngData(plantUMLContent);
             if (pngDataOpt.isEmpty()) {
                 return Optional.empty();
@@ -76,27 +100,16 @@ public class PlantUMLService {
     }
 
     /**
-     * Generates PNG data from PlantUML content using the PlantUML library.
+     * Generates PNG data from PlantUML content using HTTP calls to PlantUML server.
      *
      * @param plantUMLContent the PlantUML content to convert
      * @return Optional containing the PNG data as a byte array, or empty if conversion fails
      */
     Optional<byte[]> generatePngData(String plantUMLContent) {
         try {
-            SourceStringReader reader = new SourceStringReader(plantUMLContent);
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            // Delegate to HTTP client which handles encoding internally
+            return httpClient.generatePngData(plantUMLContent);
 
-            // Convert to PNG format
-            @SuppressWarnings("UnusedVariable")
-            DiagramDescription description = reader.outputImage(outputStream, new FileFormatOption(FileFormat.PNG));
-
-            byte[] pngData = outputStream.toByteArray();
-
-            if (pngData.length == 0) {
-                return Optional.empty();
-            }
-
-            return Optional.of(pngData);
         } catch (Exception e) {
             return Optional.empty();
         }
