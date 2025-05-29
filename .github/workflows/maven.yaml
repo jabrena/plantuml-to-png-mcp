@@ -16,3 +16,23 @@ jobs:
           java-version: '24'
       - name: Maven build
         run: ./mvnw --batch-mode --no-transfer-progress verify --file pom.xml
+
+      - name: Get Maven project version
+        id: get_version
+        run: echo "VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_OUTPUT
+
+      - name: Test CLI commands
+        run: |
+          JAR_FILE="./target/setup-${{ steps.get_version.outputs.VERSION }}.jar"
+          echo "Testing CLI with $JAR_FILE"
+          java -jar $JAR_FILE --help
+          java -jar $JAR_FILE init --help
+          # Run basic init commands and check exit code
+          java -jar $JAR_FILE init --file ./docs/sample-diagram.puml || exit 1
+
+      - name: Upload jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: setup-${{ steps.get_version.outputs.VERSION }}.jar
+          path: |
+            ./target/setup-${{ steps.get_version.outputs.VERSION }}.jar

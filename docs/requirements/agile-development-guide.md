@@ -49,7 +49,7 @@ Create a user story based on the feature and the acceptance criteria using the i
 Create the UML sequence diagram based in plantuml format using the information provided with the cursor rule @2004-uml-sequence-diagram-from-agile-artifacts
 ```
 
-  - **1.5 [ ] Create the `C4 Model` diagrams based on the requirements**
+  - **1.5 [x] Create the `C4 Model` diagrams based on the requirements**
 
 **Note:** Attach the EPIC, Feature, User Story, Gherkin & UML Sequence diagram created previously
 
@@ -61,7 +61,7 @@ Create the C4 Model diagrams from the requirements in plantuml format using the 
 
 ### Phase 3: Architecture Decision Records (ADRs)
 
-  - **1.6 [ ] Create an `ADR` about the functional requirements**
+  - **1.6 [x] Create an `ADR` about the functional requirements**
 
 **Note:** Attach the EPIC, Feature, User Story, Gherkin, UML Sequence diagram & C4 Model diagrams created previously
 
@@ -95,9 +95,9 @@ Create the ADR about the non functional requirements using the information provi
 
 ### Phase 4: Solution Review & Design Validation
 
-- **2. [ ] Review current solution state.**
+- **2. [x] Review current solution state.**
 
- - **2.1 [ ] Create an UML class diagram**
+ - **2.1 [x] Create an UML class diagram**
 
 **Note:** Once you have a solution stable, you could review some aspects about the Design, maybe you could see some way to improve:
 
