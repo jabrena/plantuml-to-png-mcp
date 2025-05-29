@@ -2,6 +2,8 @@
 
 ## Motivation
 
+Plantuml-to-png is a CLI utility designed to convert PlantUML files (.puml) to PNG format
+
 When you store your `.puml` files in your repository, you need to do an extra step in order to generate the image in `.png` format using a Third party service.
 
 Using this project, you could simplify this step.
@@ -28,8 +30,9 @@ jwebserver -p 8001 -d "$(pwd)/target/site/jacoco"
 
 ```bash
 ./mvnw clean package
-java -jar target/plantuml-to-png-0.1.0.jar --help
-java -jar target/plantuml-to-png-0.1.0.jar --file ./docs/sample-diagram.puml
+java -jar target/plantuml-to-png-0.2.0.jar --help
+java -jar target/plantuml-to-png-0.2.0.jar --file ./docs/sample-diagram.puml
+java -jar target/plantuml-to-png-0.2.0.jar --watch docs
 ```
 
 ## References

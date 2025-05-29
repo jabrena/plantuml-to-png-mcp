@@ -20,7 +20,7 @@ import java.util.zip.Deflater;
  */
 public class PlantUMLHttpClient {
 
-    private static final Duration HTTP_TIMEOUT = Duration.ofSeconds(30);
+    private static final Duration HTTP_TIMEOUT = Duration.ofSeconds(10);
 
     private final String serverUrl;
     private final HttpClient httpClient;

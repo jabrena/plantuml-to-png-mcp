@@ -5,7 +5,7 @@
 
   <groupId>info.jab.cli</groupId>
   <artifactId>plantuml-to-png</artifactId>
-  <version>0.1.0</version>
+  <version>0.2.0</version>
 
   <properties>
     <java.version>24</java.version>
@@ -25,6 +25,10 @@
     <mockito.version>5.18.0</mockito.version>
     <byte-buddy.version>1.17.5</byte-buddy.version>
     <wiremock.version>3.9.2</wiremock.version>
+
+    <!-- Maven Extensions -->
+    <maven-extensions-timeline.version>2.0.1</maven-extensions-timeline.version>
+    <maven-extensions-build-cache.version>1.2.0</maven-extensions-build-cache.version>
 
     <!-- Maven Plugins -->
     <maven-plugins-flatten.version>1.7.0</maven-plugins-flatten.version>
@@ -137,6 +141,19 @@
   </dependencies>
 
   <build>
+    <extensions>
+        <extension>
+            <groupId>io.takari.maven</groupId>
+            <artifactId>maven-timeline</artifactId>
+            <version>${maven-extensions-timeline.version}</version>
+        </extension>
+        <extension>
+            <groupId>org.apache.maven.extensions</groupId>
+            <artifactId>maven-build-cache-extension</artifactId>
+            <version>${maven-extensions-build-cache.version}</version>
+        </extension>
+    </extensions>
+
     <plugins>
       <!-- Flatten Maven Plugin -->
       <plugin>
@@ -337,7 +354,7 @@
               </filters>
               <transformers>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                  <mainClass>info.jab.core.PlantUMLToPngCli</mainClass>
+                  <mainClass>info.jab.core.PlantUMLToPng</mainClass>
                 </transformer>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheLicenseResourceTransformer"/>
