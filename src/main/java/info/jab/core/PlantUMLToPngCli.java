@@ -4,8 +4,14 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.concurrent.Callable;
+
+import com.diogonunes.jcolor.Attribute;
+import static com.diogonunes.jcolor.Ansi.colorize;
+import com.github.lalyos.jfiglet.FigletFont;
+
 import java.util.Optional;
 
 /**
@@ -81,12 +87,23 @@ public class PlantUMLToPngCli implements Callable<Integer> {
             });
     }
 
+    private static void printBanner() {
+        try {
+            System.out.println();
+            String asciiArt = FigletFont.convertOneLine("PlantUML to PNG CLI");
+            System.out.println(colorize(asciiArt, Attribute.GREEN_TEXT()));
+        } catch (IOException e) {
+            System.out.println("Error printing banner: " + e.getMessage());
+        }
+    }
+
     /**
      * Main method for CLI execution.
      *
      * @param args Command line arguments
      */
     public static void main(String[] args) {
+        printBanner();
         PlantUMLToPngCli cli = new PlantUMLToPngCli();
         int exitCode = new CommandLine(cli).execute(args);
         System.exit(exitCode);
