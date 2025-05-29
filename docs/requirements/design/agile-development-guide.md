@@ -11,7 +11,7 @@ Use the following step-by-step process to implement a complete agile development
 
 ### Phase 1: Requirements Analysis & Agile Artifacts
 
-- **1. [x] Review requirements.**
+- **1. [ ] Review requirements.**
 
   - **1.1 [x] Create an `Epic` about the development**
 
@@ -49,7 +49,7 @@ Create a user story based on the feature and the acceptance criteria using the i
 Create the UML sequence diagram based in plantuml format using the information provided with the cursor rule @2004-uml-sequence-diagram-from-agile-artifacts
 ```
 
-  - **1.5 [x] Create the `C4 Model` diagrams based on the requirements**
+  - **1.5 [ ] Create the `C4 Model` diagrams based on the requirements**
 
 **Note:** Attach the EPIC, Feature, User Story, Gherkin & UML Sequence diagram created previously
 
@@ -61,7 +61,7 @@ Create the C4 Model diagrams from the requirements in plantuml format using the 
 
 ### Phase 3: Architecture Decision Records (ADRs)
 
-  - **1.6 [x] Create an `ADR` about the functional requirements**
+  - **1.6 [ ] Create an `ADR` about the functional requirements**
 
 **Note:** Attach the EPIC, Feature, User Story, Gherkin, UML Sequence diagram & C4 Model diagrams created previously
 
@@ -77,7 +77,7 @@ Create the ADR about functional requirements using the cursor rule @2006-adr-cre
 Create the ADR about the functional requirements using the information provided with the cursor rule @2006-adr-create-functional-requirements-for-rest-api-development
 ```
 
-  - **1.7 [x] Create an `ADR` about the acceptance testing Strategy**
+  - **1.7 [ ] Create an `ADR` about the acceptance testing Strategy**
 
 **Note:** Attach User Story & Gherkin created previously
 
@@ -85,7 +85,7 @@ Create the ADR about the functional requirements using the information provided 
 Create the ADR about the acceptance testing strategy using the information provided with the cursor rule @2007-adr-create-acceptance-testing-strategy
 ```
 
-  - **1.8 [x] Create an `ADR` about the non functional requirements**
+  - **1.8 [ ] Create an `ADR` about the non functional requirements**
 
 **Note:** Attach the EPIC, Feature, User Story, Gherkin, UML Sequence diagram & C4 Model diagrams created previously
 
@@ -95,9 +95,9 @@ Create the ADR about the non functional requirements using the information provi
 
 ### Phase 4: Solution Review & Design Validation
 
-- **2. [x] Review current solution state.**
+- **2. [ ] Review current solution state.**
 
- - **2.1 [x] Create an UML class diagram**
+ - **2.1 [ ] Create an UML class diagram**
 
 **Note:** Once you have a solution stable, you could review some aspects about the Design, maybe you could see some way to improve:
 

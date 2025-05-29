@@ -1,0 +1,76 @@
+@startuml PlantUML CLI Conversion Workflow
+!theme plain
+title PlantUML to PNG CLI Tool - Conversion Workflow
+
+' Actors and Participants
+participant "Developer" as Dev #LightBlue
+participant "JBang CLI Tool" as CLI #LightGreen
+participant "File System" as FS #LightYellow
+participant "PlantUML Library" as PUML #LightCoral
+participant "Graphviz Engine" as GV #LightGray
+
+' Main Sequence Flow
+Dev -> CLI : Execute CLI with .puml file path
+activate CLI
+
+CLI -> CLI : Parse command line arguments
+CLI -> CLI : Validate input parameters
+
+' File Input Validation
+CLI -> FS : Check if .puml file exists
+activate FS
+FS --> CLI : File exists confirmation
+deactivate FS
+
+CLI -> FS : Read .puml file content
+activate FS
+FS --> CLI : Return file content
+deactivate FS
+
+' PlantUML Processing
+CLI -> PUML : Initialize PlantUML processor
+activate PUML
+
+CLI -> PUML : Parse .puml content
+PUML -> PUML : Validate PlantUML syntax
+
+alt Valid PlantUML Syntax
+  PUML -> GV : Request diagram rendering
+  activate GV
+  GV --> PUML : Return rendered diagram data
+  deactivate GV
+
+  PUML --> CLI : Return PNG image data
+  deactivate PUML
+
+  ' File Output Generation
+  CLI -> CLI : Generate output filename (same as input)
+  CLI -> FS : Write PNG file to same directory
+  activate FS
+  FS --> CLI : Confirm file written successfully
+  deactivate FS
+
+  CLI --> Dev : Success message with output path
+  note right of Dev : PNG file created:\n/path/to/diagram.png
+
+else Invalid PlantUML Syntax
+  PUML --> CLI : Syntax error details
+  deactivate PUML
+  CLI --> Dev : Error message with syntax details
+  note right of Dev : "PlantUML syntax error detected"
+
+else File System Error
+  FS --> CLI : File permission error
+  CLI --> Dev : File system error message
+  note right of Dev : "Cannot write to directory"
+
+end
+
+deactivate CLI
+
+' Background Process Notes
+note over GV : Graphviz must be\ninstalled on host system
+
+note over CLI : CLI Tool Features:\n- Command line argument parsing\n- File validation\n- Error handling\n- Same-directory output
+
+@enduml

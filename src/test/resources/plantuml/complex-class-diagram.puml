@@ -1,0 +1,18 @@
+@startuml
+!define RECTANGLE class
+
+RECTANGLE User {
+    +String name
+    +String email
+    +login()
+    +logout()
+}
+
+RECTANGLE Order {
+    +String id
+    +Date date
+    +calculateTotal()
+}
+
+User ||--o{ Order : places
+@enduml

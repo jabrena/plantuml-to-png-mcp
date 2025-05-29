@@ -14,6 +14,7 @@ Using this project, you could simplify this step.
 ./mvnw license:third-party-report
 jwebserver -p 8000 -d "$(pwd)/target/reports/"
 ./mvnw clean verify
+./mvnw clean verify -DENABLE_INTEGRATION_TESTS=true
 ./mvnw clean verify surefire-report:report
 ./mvnw clean verify jacoco:report -Pjacoco
 jwebserver -p 8001 -d "$(pwd)/target/site/jacoco"
@@ -41,3 +42,5 @@ java -jar target/plantuml-to-png-0.1.0.jar --file ./docs/sample-diagram.puml
 - ...
 - https://github.com/jabrena/cursor-rules-agile
 - https://github.com/jabrena/cursor-rules-java
+
+Powered by [Cursor](https://www.cursor.com/)

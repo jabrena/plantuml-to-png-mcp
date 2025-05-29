@@ -35,7 +35,7 @@ class PlantUMLFileValidatorTest {
     @Test
     void validatePlantUMLFile_withValidFile_shouldReturnPath() {
         // Given
-        Path validFile = getTestResourcePath("plantuml/valid-simple.puml");
+        Path validFile = getTestResourcePath("plantuml/hello-world.puml");
 
         // When
         Optional<Path> result = validator.validatePlantUMLFile(validFile.toString());

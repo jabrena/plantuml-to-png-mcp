@@ -1,0 +1,4 @@
+@startuml
+Juanito -> Jorgito: Hello
+Jorgito -> Juanito: World!
+@enduml

@@ -68,7 +68,7 @@ class PlantUMLToPngCliTest {
         void should_returnExitCode0_when_convertingValidPlantUMLFile() throws IOException {
             // Given
             Path testFile = tempDir.resolve("test.puml");
-            TestResourceLoader.loadPlantUMLResource("valid-simple.puml", testFile);
+            TestResourceLoader.loadPlantUMLResource("hello-world.puml", testFile);
 
             Path expectedOutputPath = tempDir.resolve("test.png");
             when(mockFileValidator.validatePlantUMLFile(testFile.toString())).thenReturn(Optional.of(testFile));
@@ -176,7 +176,7 @@ class PlantUMLToPngCliTest {
         void should_returnExitCode1_when_conversionFails() throws IOException {
             // Given
             Path testFile = tempDir.resolve("test.puml");
-            TestResourceLoader.loadPlantUMLResource("valid-simple.puml", testFile);
+            TestResourceLoader.loadPlantUMLResource("hello-world.puml", testFile);
 
             when(mockFileValidator.validatePlantUMLFile(testFile.toString())).thenReturn(Optional.of(testFile));
             when(mockService.convertToPng(testFile)).thenReturn(Optional.empty());
