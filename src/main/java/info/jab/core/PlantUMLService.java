@@ -54,6 +54,7 @@ public class PlantUMLService {
      * @return Optional containing the path to the generated PNG file, or empty if conversion fails
      */
     public Optional<Path> convertToPng(Path inputPath) {
+        System.out.println("Converting PlantUML file to PNG: " + inputPath);
         try {
             // Read the PlantUML file content
             String plantUMLContent = Files.readString(inputPath, StandardCharsets.UTF_8);

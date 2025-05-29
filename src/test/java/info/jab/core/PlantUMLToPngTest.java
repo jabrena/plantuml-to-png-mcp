@@ -40,7 +40,7 @@ import static org.mockito.Mockito.when;
 @NullMarked
 @ExtendWith(MockitoExtension.class)
 @DisplayName("PlantUML to PNG CLI")
-class PlantUMLToPngCliTest {
+class PlantUMLToPngTest {
 
     @TempDir
     private Path tempDir;
@@ -51,12 +51,12 @@ class PlantUMLToPngCliTest {
     @Mock
     private PlantUMLFileValidator mockFileValidator;
 
-    private PlantUMLToPngCli cli;
+    private PlantUMLToPng cli;
 
     @BeforeEach
     @SuppressWarnings("NullAway.Init")
     void setUp() {
-        cli = new PlantUMLToPngCli(mockFileValidator, mockService);
+        cli = new PlantUMLToPng(mockFileValidator, mockService);
     }
 
     @Nested
