@@ -48,7 +48,7 @@ public class PlantUMLToPng implements Callable<Integer> {
     private String watchDirectory;
 
     private final PlantUMLFileValidator fileValidator;
-    private final PlantUMLFileService plantUMLService;
+    private final PlantUMLFileService fileService;
     private final PlantUMLWatchService watchService;
 
     /**
@@ -56,20 +56,20 @@ public class PlantUMLToPng implements Callable<Integer> {
      */
     public PlantUMLToPng() {
         this.fileValidator = new PlantUMLFileValidator();
-        this.plantUMLService = new PlantUMLFileService();
-        this.watchService = new PlantUMLWatchService(plantUMLService);
+        this.fileService = new PlantUMLFileService();
+        this.watchService = new PlantUMLWatchService(fileService);
     }
 
     /**
      * Constructor for dependency injection (primarily for testing).
      *
-     * @param plantUMLService The PlantUML service to use
-     * @param watchService The watch service to use
      * @param fileValidator The file validator to use
+     * @param fileService The PlantUML file service to use
+     * @param watchService The watch service to use
      */
-    public PlantUMLToPng(PlantUMLFileValidator fileValidator, PlantUMLFileService plantUMLService, PlantUMLWatchService watchService) {
+    public PlantUMLToPng(PlantUMLFileValidator fileValidator, PlantUMLFileService fileService, PlantUMLWatchService watchService) {
         this.fileValidator = fileValidator;
-        this.plantUMLService = plantUMLService;
+        this.fileService = fileService;
         this.watchService = watchService;
     }
 
@@ -85,12 +85,13 @@ public class PlantUMLToPng implements Callable<Integer> {
      * @return CliResult indicating success or failure
      */
     public CliResult execute() {
-        if (Objects.nonNull(inputFile)) {
-            return handleSingleFileConversion(inputFile);
-        }
-
+        // Watch mode has more priority than single file conversion
         if (Objects.nonNull(watchDirectory)) {
             return handleWatchMode(watchDirectory);
+        }
+
+        if (Objects.nonNull(inputFile)) {
+            return handleSingleFileConversion(inputFile);
         }
 
         System.out.println("Use --help to see available options.");
@@ -111,7 +112,7 @@ public class PlantUMLToPng implements Callable<Integer> {
         }
 
         // Use the validated Path for processing
-        if (plantUMLService.processFile(validatedPath.get())) {
+        if (fileService.processFile(validatedPath.get())) {
             return CliResult.OK;
         } else {
             return CliResult.KO;

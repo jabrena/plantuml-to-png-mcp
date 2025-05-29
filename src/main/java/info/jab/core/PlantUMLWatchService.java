@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.function.BooleanSupplier;
 
 /**
  * Service responsible for watching directory changes and automatically converting PlantUML files.
@@ -21,6 +22,7 @@ public class PlantUMLWatchService {
 
     private final PlantUMLFileService plantUMLService;
     private final long pollingIntervalMs;
+    private volatile boolean stopRequested = false;
 
     /**
      * Constructor with default polling interval.
@@ -52,22 +54,7 @@ public class PlantUMLWatchService {
      * @return Exit code (0 for success, 1 for error)
      */
     public Integer startWatching(Path watchDirectory) {
-        System.out.println("Starting watch mode in directory: " + watchDirectory);
-
-        try {
-            while (true) {
-                processPlantUMLFiles(watchDirectory);
-                Thread.sleep(pollingIntervalMs);
-            }
-
-        } catch (InterruptedException e) {
-            System.out.println("Watch mode interrupted. Exiting...");
-            Thread.currentThread().interrupt();
-            return 1;
-        } catch (IOException e) {
-            System.err.println("Error scanning directory for .puml files: " + e.getMessage());
-            return 1;
-        }
+        return startWatching(watchDirectory, () -> !stopRequested);
     }
 
     /**
@@ -83,12 +70,49 @@ public class PlantUMLWatchService {
     }
 
     /**
-     * Processes all PlantUML files in the given directory.
+     * Requests the watch service to stop after the current iteration completes.
+     */
+    public void stopWatching() {
+        this.stopRequested = true;
+    }
+
+    /**
+     * Package-private method for testing that allows control over the loop condition.
+     *
+     * @param watchDirectory The directory to watch for PlantUML files
+     * @param shouldContinue Function that returns true if the loop should continue
+     * @return Exit code (0 for success, 1 for error)
+     */
+    Integer startWatching(Path watchDirectory, BooleanSupplier shouldContinue) {
+        System.out.println("Starting watch mode in directory: " + watchDirectory);
+
+        try {
+            while (shouldContinue.getAsBoolean()) {
+                processPlantUMLFiles(watchDirectory);
+                if (shouldContinue.getAsBoolean()) { // Check again before sleeping
+                    Thread.sleep(pollingIntervalMs);
+                }
+            }
+            return 0;
+
+        } catch (InterruptedException e) {
+            System.out.println("Watch mode interrupted. Exiting...");
+            Thread.currentThread().interrupt();
+            return 1;
+        } catch (IOException e) {
+            System.err.println("Error scanning directory for .puml files: " + e.getMessage());
+            return 1;
+        }
+    }
+
+    /**
+     * Processes all PlantUML files in the given directory once.
+     * This method is package-private to facilitate testing.
      *
      * @param directory The directory to scan for .puml files
      * @throws IOException If there's an error reading the directory
      */
-    private void processPlantUMLFiles(Path directory) throws IOException {
+    void processPlantUMLFiles(Path directory) throws IOException {
         List<Path> pumlFiles = listPlantUMLFiles(directory);
 
         if (!pumlFiles.isEmpty()) {
