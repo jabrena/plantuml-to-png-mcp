@@ -2,6 +2,8 @@
 
 ## Motivation
 
+Plantuml-to-png is a CLI utility designed to convert PlantUML files (.puml) to PNG format
+
 When you store your `.puml` files in your repository, you need to do an extra step in order to generate the image in `.png` format using a Third party service.
 
 Using this project, you could simplify this step.
