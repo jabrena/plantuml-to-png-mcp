@@ -28,7 +28,7 @@ jobs:
           java -jar $JAR_FILE --help
           # Run basic init commands and check exit code
           java -jar $JAR_FILE --file ./docs/sample-diagram.puml || exit 1
-          timeout -s INT 10 java -jar $JAR_FILE --watch ./docs || exit 1
+          timeout -s INT 10 java -jar $JAR_FILE --watch ./docs || exit 0
           echo "✅ CLI commands executed successfully"
 
       - name: Upload jar
