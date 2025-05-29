@@ -1,0 +1,45 @@
+@startuml PlantUML to PNG CLI Tool - Container
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title Container diagram for PlantUML to PNG CLI Tool
+
+' External Actors
+Person(Developer, "Developer", "Software developer creating PlantUML diagrams")
+
+' External Systems
+System_Ext(FileSystem, "File System", "Local file system for file storage")
+System_Ext(PlantUMLServer, "PlantUML Server", "HTTP-based PlantUML rendering server for PNG generation")
+
+' System Boundary
+System_Boundary(PlantUMLTool, "PlantUML to PNG CLI Tool") {
+    Container(CLIInterface, "CLI Interface", "PicoCLI Framework", "Command-line interface that accepts .puml file paths, watch directories, and handles user interaction using PicoCLI annotations")
+
+    Container(FileValidator, "File Validator", "Java Component", "Validates PlantUML file paths, checks file existence, readability, and .puml extension requirements")
+
+    Container(FileService, "PlantUML File Service", "Java Service", "Core service that orchestrates file processing, content validation, and PNG generation workflow")
+
+    Container(HttpClient, "PlantUML HTTP Client", "Java HTTP Client", "Handles HTTP communication with PlantUML server, including content encoding using custom PlantUML base64 scheme and deflate compression")
+
+    Container(WatchService, "Watch Service", "Java Service", "Polling-based directory watcher that automatically detects new .puml files and triggers conversion when corresponding .png files don't exist")
+}
+
+' Relationships
+Rel(Developer, CLIInterface, "Executes tool with file path or --watch directory", "Command Line Args")
+
+Rel(CLIInterface, FileValidator, "Validates input file paths", "Method Calls")
+Rel(CLIInterface, FileService, "Requests single file conversion", "Method Calls")
+Rel(CLIInterface, WatchService, "Starts watch mode", "Method Calls")
+
+Rel(FileService, FileValidator, "Validates files during processing", "Method Calls")
+Rel(FileService, HttpClient, "Requests PNG generation", "Method Calls")
+Rel(FileService, FileSystem, "Read .puml files / Write .png files", "File I/O")
+
+Rel(HttpClient, PlantUMLServer, "Send encoded content / Receive PNG data", "HTTPS")
+
+Rel(WatchService, FileService, "Triggers file conversion", "Method Calls")
+Rel(WatchService, FileSystem, "Scans for .puml files", "Directory Listing")
+
+Rel(FileValidator, FileSystem, "Checks file existence and properties", "File System Calls")
+
+SHOW_LEGEND()
+@enduml
