@@ -33,6 +33,14 @@ jwebserver -p 8001 -d "$(pwd)/target/site/jacoco"
 java -jar target/plantuml-to-png-0.2.0.jar --help
 java -jar target/plantuml-to-png-0.2.0.jar --file ./docs/sample-diagram.puml
 java -jar target/plantuml-to-png-0.2.0.jar --watch docs
+
+jbang cache clear
+jbang catalog list
+jbang catalog list jabrena
+
+jbang plantuml-to-png@jabrena --help
+jbang plantuml-to-png@jabrena --file ./docs/sample-diagram.puml
+jbang plantuml-to-png@jabrena --watch docs
 ```
 
 ## References
