@@ -1,6 +1,6 @@
 # ADR-002: PlantUML to PNG CLI Tool - Acceptance Testing Strategy
 
-**Date:** 2024-12-19
+**Date:** 2025-05-30
 **Status:** Proposed
 **Technical Area:** Acceptance Testing Strategy
 **Software Type:** Command-Line Interface (CLI) Tool
@@ -10,7 +10,7 @@
 ### Software Overview
 **Type:** Command-Line Interface (CLI) Tool
 **Architecture:** Monolithic Java Application
-**Technology Stack:** Java 24, Maven, PicoCLI Framework, PlantUML Library (1.2023.13), JUnit 5, JaCoCo, JBang Distribution
+**Technology Stack:** Java 24, Maven, PicoCLI Framework, HTTP PlantUML Integration, JUnit 5, JaCoCo, JBang Distribution
 
 ### Business Context
 The PlantUML to PNG CLI tool addresses a critical developer workflow issue where GitHub doesn't automatically render PlantUML (.puml) files in Markdown documentation. The tool converts single .puml files to .png format via command line, generating PNG files with the same filename in the same directory as the source file. This automation eliminates manual conversion processes and ensures documentation diagrams are always accessible in GitHub repositories.
@@ -24,14 +24,14 @@ The project has established comprehensive functional requirements including:
 - Developer-owned testing approach with team responsibility for test maintenance
 
 ### Problem Statement
-Need to establish a comprehensive acceptance testing strategy that achieves **zero production issues related to file conversion** while addressing the three primary risk areas: Graphviz dependency management, invalid PlantUML file handling, and file system path issues. The strategy must integrate seamlessly with developer workflows and provide confidence for continuous delivery.
+Need to establish a comprehensive acceptance testing strategy that achieves **zero production issues related to file conversion** while addressing the three primary risk areas: Network connectivity management, invalid PlantUML file handling, and file system path issues. The strategy must integrate seamlessly with developer workflows and provide confidence for continuous delivery.
 
 ## Functional Requirements Impact
 
 ### Critical User Journeys
 1. **Single File Conversion:** Developer executes CLI tool with valid .puml file path and receives correct PNG output
-2. **Graphviz Dependency Validation:** Tool detects Graphviz availability and provides clear guidance when missing
-3. **Error Handling:** Tool provides actionable error messages for invalid files, syntax errors, and path issues
+2. **Network Connectivity Validation:** Tool detects PlantUML server availability and provides clear guidance when unavailable
+3. **Error Handling:** Tool provides actionable error messages for invalid files, syntax errors, and connectivity issues
 4. **Cross-Platform Execution:** Consistent behavior across environments where JBang is installed
 
 ### User Types and Personas
@@ -41,8 +41,8 @@ Need to establish a comprehensive acceptance testing strategy that achieves **ze
 
 ### Integration Points
 - **File System:** Critical integration for reading .puml files and writing .png files with path validation
-- **Graphviz:** External dependency requiring availability detection and error guidance
-- **PlantUML Library:** Core dependency (net.sourceforge.plantuml:plantuml:1.2023.13) for conversion processing
+- **PlantUML Server:** HTTP-based dependency requiring connectivity detection and error guidance
+- **HTTP Client:** Core integration for communicating with PlantUML server endpoints
 - **JBang Runtime:** Simplified distribution eliminating complex cross-platform installation requirements
 
 ### Data and Compliance Requirements
@@ -59,11 +59,11 @@ Implement a three-pronged approach that leverages existing Gherkin scenarios whi
 
 ### Testing Scope and Coverage
 - **End-to-End CLI Testing:** Complete command execution from file input to PNG output validation
-- **Risk-Focused Testing:** Comprehensive coverage of Graphviz dependency, bad PlantUML files, and path issues
-- **Environment Validation:** Graphviz detection and JBang execution across different platforms
+- **Risk-Focused Testing:** Comprehensive coverage of network connectivity, bad PlantUML files, and path issues
+- **Environment Validation:** Network connectivity detection and JBang execution across different platforms
 - **Error Scenario Testing:** All failure modes with validation of error messages and exit codes
 - **Regression Testing:** Ensure existing functionality remains intact with new changes
-- **Integration Testing:** PlantUML library integration and file system operations
+- **Integration Testing:** HTTP PlantUML server integration and file system operations
 
 ### Automation vs Manual Balance
 - **Automated Testing (95%):** All core functionality, error scenarios, environment validation, and regression tests
@@ -105,10 +105,10 @@ Implement a three-pronged approach that leverages existing Gherkin scenarios whi
 - Implement Cucumber-JVM test runner with Maven integration
 - Create CLI test utilities using ProcessBuilder for actual command execution
 - Develop comprehensive test data set including valid/invalid .puml files and path scenarios
-- Add Graphviz availability detection tests
+- Add network connectivity detection tests
 
 ### Phase 2: Risk-Focused Test Development (Week 2-3)
-- Implement automated tests for all Graphviz dependency scenarios (present/missing/broken)
+- Implement automated tests for all network connectivity scenarios (available/unavailable/timeout)
 - Create comprehensive bad PlantUML file test suite (syntax errors, malformed files, edge cases)
 - Develop bad path testing (non-existent files, permission issues, invalid characters)
 - Add error message validation and exit code verification
@@ -142,8 +142,8 @@ Implement a three-pronged approach that leverages existing Gherkin scenarios whi
 - **Defect Detection Rate:** 100% of conversion issues caught by acceptance tests before manual testing
 
 ### Quality Gates
-- All Gherkin scenarios pass with valid .puml files and proper environment setup
-- All three risk areas (Graphviz, bad files, bad paths) have comprehensive test coverage
+- All Gherkin scenarios pass with valid .puml files and proper network connectivity
+- All three risk areas (network connectivity, bad files, bad paths) have comprehensive test coverage
 - Error scenarios produce appropriate error messages and exit codes
 - PNG output files are generated correctly with proper naming and directory placement
 - Performance criteria met for typical diagram conversion scenarios
@@ -159,7 +159,7 @@ Implement a three-pronged approach that leverages existing Gherkin scenarios whi
 ### Positive Outcomes
 - **Zero Production Issues:** Comprehensive testing strategy designed to catch all conversion-related problems before production
 - **Developer Confidence:** Automated regression testing enables safe refactoring and feature additions
-- **Risk Mitigation:** Focused coverage of the three primary risk areas (Graphviz, bad files, bad paths)
+- **Risk Mitigation:** Focused coverage of the three primary risk areas (network connectivity, bad files, bad paths)
 - **Continuous Quality:** Automated quality gates prevent broken functionality from reaching users
 - **Maintainable Tests:** Developer-owned approach ensures tests evolve with the codebase
 - **Fast Feedback:** Quick test execution provides immediate validation of changes
@@ -170,7 +170,7 @@ Implement a three-pronged approach that leverages existing Gherkin scenarios whi
 - **Build Time Impact:** More comprehensive testing increases build duration → **Mitigation:** Optimize test execution, parallel execution where possible, target under 3 minutes total
 
 ### Risks and Contingencies
-- **Environment Dependency Risk:** Tests may fail if Graphviz not available in CI/CD → **Mitigation:** Include Graphviz installation in CI/CD setup, clear documentation for local development
+- **Environment Dependency Risk:** Tests may fail if network connectivity unavailable in CI/CD → **Mitigation:** Include test environment setup with network validation, clear documentation for local development
 - **Test Data Management:** Sample .puml files may become outdated → **Mitigation:** Version control test data, regular review process, automated test data validation
 - **False Positive Risk:** Overly strict tests may block valid changes → **Mitigation:** Focus on functional correctness, avoid brittle assertions, regular test review
 
@@ -186,7 +186,7 @@ Implement a three-pronged approach that leverages existing Gherkin scenarios whi
 
 ### Test Maintenance Strategy
 - **Test Data:** Version-controlled sample .puml files covering various complexity levels and error scenarios
-- **Environment Management:** Documented setup procedures for development and CI/CD environments with Graphviz requirements
+- **Environment Management:** Documented setup procedures for development and CI/CD environments with network connectivity requirements
 - **Test Updates:** Tests updated alongside feature development as first-class citizens, not afterthoughts
 - **Regular Review:** Monthly assessment of test effectiveness and coverage gaps
 
@@ -213,9 +213,9 @@ Implement a three-pronged approach that leverages existing Gherkin scenarios whi
 
 ### Tool Documentation
 - [PicoCLI Testing Guide](https://picocli.info/#_testing)
-- [PlantUML Library Documentation](https://plantuml.com/)
+- [PlantUML Server Documentation](https://plantuml.com/server)
 - [JaCoCo Maven Plugin](https://www.jacoco.org/jacoco/trunk/doc/maven.html)
 - [JBang Documentation](https://www.jbang.dev/)
 
 ---
-*This ADR defines a comprehensive acceptance testing strategy focused on achieving zero production issues for file conversion functionality. Last updated: 2024-12-19*
+*This ADR defines a comprehensive acceptance testing strategy focused on achieving zero production issues for file conversion functionality. Last updated: 2025-05-30*

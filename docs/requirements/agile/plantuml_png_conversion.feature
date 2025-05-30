@@ -1,7 +1,7 @@
 Feature: PNG generation from puml files
 
 Background:
-  Given Graphviz is installed on the host
+  Given HTTP connectivity to PlantUML server is available
 
 Scenario: Successfully convert valid PlantUML file to PNG
   Given a valid .puml file exists at '/path/to/diagram.puml'
@@ -25,3 +25,11 @@ Scenario: Handle invalid PlantUML file syntax
     | Input File Path                     | Expected Error Message                    |
     | /docs/broken-syntax.puml            | "PlantUML syntax error detected"          |
     | /diagrams/incomplete-diagram.puml   | "Invalid PlantUML file format"            |
+
+Scenario: Handle network connectivity issues
+  Given a valid .puml file exists at '/path/to/diagram.puml'
+  And the PlantUML server is not accessible
+  When I execute the JBang CLI tool with the .puml file path as parameter
+  Then the tool displays an error message indicating network connectivity issues
+  And no PNG file is created
+  And the exit code is non-zero

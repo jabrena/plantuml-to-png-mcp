@@ -16,6 +16,6 @@ The detailed acceptance criteria for this user story, illustrated with concrete 
 ## Additional Notes
 
 - Uses JBang for CLI implementation
-- Requires Graphviz installation on the host system
+- Uses HTTP integration with PlantUML server (no local dependencies required)
 - Output PNG file maintains same filename as input .puml file
 - PNG file is generated in the same directory as the source .puml file

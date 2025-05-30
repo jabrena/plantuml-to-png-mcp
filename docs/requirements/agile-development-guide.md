@@ -11,7 +11,7 @@ Use the following step-by-step process to implement a complete agile development
 
 ### Phase 1: Requirements Analysis & Agile Artifacts
 
-- **1. [ ] Review requirements.**
+- **1. [x] Review requirements.**
 
   - **1.1 [x] Create an `Epic` about the development**
 
@@ -77,7 +77,7 @@ Create the ADR about functional requirements using the cursor rule @2006-adr-cre
 Create the ADR about the functional requirements using the information provided with the cursor rule @2006-adr-create-functional-requirements-for-rest-api-development
 ```
 
-  - **1.7 [ ] Create an `ADR` about the acceptance testing Strategy**
+  - **1.7 [x] Create an `ADR` about the acceptance testing Strategy**
 
 **Note:** Attach User Story & Gherkin created previously
 
@@ -85,7 +85,7 @@ Create the ADR about the functional requirements using the information provided 
 Create the ADR about the acceptance testing strategy using the information provided with the cursor rule @2007-adr-create-acceptance-testing-strategy
 ```
 
-  - **1.8 [ ] Create an `ADR` about the non functional requirements**
+  - **1.8 [x] Create an `ADR` about the non functional requirements**
 
 **Note:** Attach the EPIC, Feature, User Story, Gherkin, UML Sequence diagram & C4 Model diagrams created previously
 

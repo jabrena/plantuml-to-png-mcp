@@ -1,56 +1,106 @@
-@startuml Sample Sequence Diagram
+@startuml PlantUML CLI Conversion Workflow
 !theme plain
-title PlantUML to PNG CLI Tool - Sample Diagram
+title PlantUML to PNG CLI Tool - Conversion Workflow
 
-actor "Developer" as Dev #LightBlue
-participant "CLI Tool" as CLI #LightGreen
-participant "PlantUML Service" as Service #LightCyan
-participant "File System" as FS #Tan
+' Actors and Participants
+participant "Developer" as Dev #LightBlue
+participant "PlantUMLToPng\n(CLI)" as CLI #LightGreen
+participant "PlantUMLFileValidator" as Validator #Orange
+participant "PlantUMLFileService" as Service #LightCyan
+participant "File System" as FS #LightYellow
+participant "PlantUMLHttpClient" as HttpClient #Pink
+participant "PlantUML Server\n(HTTP)" as Server #LightCoral
 
-Dev -> CLI : execute --file diagram.puml
+' Main Sequence Flow
+Dev -> CLI : Execute CLI with .puml file path
 activate CLI
 
-CLI -> CLI : validate file path and extension
-note right of CLI : Check .puml extension\nVerify file exists and is readable
+CLI -> CLI : Parse command line arguments (PicoCLI)
+CLI -> CLI : execute() - Determine mode (single file vs watch)
 
-CLI -> Service : isGraphvizAvailable()
-activate Service
-Service --> CLI : true
-deactivate Service
+' File Input Validation
+CLI -> Validator : validatePlantUMLFile(inputFile)
+activate Validator
 
-CLI -> Service : convertToPng(path, verbose)
-activate Service
-
-Service -> FS : read .puml file content
+Validator -> FS : Check file exists, readable, .puml extension
 activate FS
-FS --> Service : PlantUML content
+FS --> Validator : File validation results
 deactivate FS
 
-Service -> Service : validatePlantUMLSyntax()
-note right of Service : Check @startuml/@enduml tags\nBasic syntax validation
+Validator --> CLI : Optional<Path> (validated path or empty)
+deactivate Validator
 
-Service -> Service : generatePngData()
-note right of Service : Use PlantUML library\nwith Graphviz rendering
+alt Valid File Path
+  CLI -> Service : processFile(validatedPath)
+  activate Service
 
-Service -> FS : write PNG file (same name, same directory)
-activate FS
-note right of FS : diagram.puml → diagram.png
-FS --> Service : file written successfully
-deactivate FS
+  Service -> Service : convertToPng(inputPath)
+  Service -> FS : Read .puml file content
+  activate FS
+  FS --> Service : Return file content as String
+  deactivate FS
 
-Service --> CLI : PNG file path
-deactivate Service
+  Service -> Service : isValidPlantUMLSyntax(content)
+  note right of Service : Basic validation:\nCheck for @startuml and @enduml
 
-CLI --> Dev : Success: "PNG generated successfully"
+  alt Valid PlantUML Syntax
+    Service -> Service : generatePngData(content)
+    Service -> HttpClient : generatePngData(plantUMLContent)
+    activate HttpClient
+
+    HttpClient -> HttpClient : encodePlantUMLContent(content)
+    note right of HttpClient : 1. UTF-8 encoding\n2. Deflate compression\n3. Custom Base64 encoding
+
+    HttpClient -> HttpClient : buildPngUrl(encodedContent)
+    HttpClient -> Server : HTTP GET /png/{encodedContent}
+    activate Server
+    Server --> HttpClient : PNG image data (byte[])
+    deactivate Server
+
+    HttpClient --> Service : Optional<byte[]> PNG data
+    deactivate HttpClient
+
+    alt PNG Generation Successful
+      Service -> Service : generateOutputPath(inputPath)
+      Service -> FS : Write PNG file to same directory
+      activate FS
+      FS --> Service : Confirm file written successfully
+      deactivate FS
+
+      Service --> CLI : true (success)
+      deactivate Service
+      CLI --> Dev : Success message with output path
+      note right of Dev : PNG file created:\n/path/to/diagram.png
+
+    else PNG Generation Failed
+      Service --> CLI : false (failed)
+      deactivate Service
+      CLI --> Dev : Error message - conversion failed
+      note right of Dev : "Failed to convert file"
+
+    end
+
+  else Invalid PlantUML Syntax
+    Service --> CLI : false (invalid syntax)
+    deactivate Service
+    CLI --> Dev : Error message with syntax details
+    note right of Dev : "PlantUML syntax error detected"
+
+  end
+
+else Invalid File Path
+  CLI --> Dev : Error message - invalid file
+  note right of Dev : "Invalid PlantUML file"
+
+end
+
 deactivate CLI
 
-note over Dev, FS
-  **Key Features:**
-  • Single file conversion
-  • Automatic file naming
-  • Same directory output
-  • Comprehensive error handling
-  • Graphviz dependency checking
-end note
+' Background Process Notes
+note over Server : Remote PlantUML Server\n(Default: http://www.plantuml.com/plantuml)
+
+note over HttpClient : Custom PlantUML Encoding:\n- Deflate compression\n- Custom Base64 charset\n- URL-safe encoding
+
+note over CLI : CLI Tool Features:\n- PicoCLI command parsing\n- Single file conversion\n- Watch mode support\n- Dependency injection support
 
 @enduml
