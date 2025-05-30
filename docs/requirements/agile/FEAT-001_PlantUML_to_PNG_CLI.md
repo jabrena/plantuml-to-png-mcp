@@ -26,7 +26,7 @@ This feature provides a complete CLI tool that accepts PlantUML file paths as in
 ### Key Capabilities
 - Command-line interface that accepts .puml file paths as arguments
 - PlantUML file parsing and validation
-- PNG image generation using PlantUML library with Graphviz rendering
+- PNG image generation using HTTP requests to PlantUML server
 - Automatic file naming (same as source .puml file)
 - Output file placement in the same directory as source file
 - Error handling and user feedback
@@ -44,7 +44,7 @@ This feature provides a complete CLI tool that accepts PlantUML file paths as in
 ### Core Requirements
 - Accept .puml file path as command-line argument
 - Parse and validate PlantUML file syntax
-- Convert .puml content to PNG format using PlantUML library
+- Convert .puml content to PNG format using HTTP integration with PlantUML server
 - Generate PNG file with same base filename as source .puml file
 - Save PNG file in the same directory as the source .puml file
 - Provide clear success/error messages to the user
@@ -99,14 +99,14 @@ This feature will be considered complete when:
 - Java application structure and packaging
 
 ### External Dependencies
-- net.sourceforge.plantuml:plantuml:1.2023.13 library
-- Graphviz rendering engine (internal to PlantUML)
+- HTTP connectivity to PlantUML server (e.g., plantuml.com)
 - Java Runtime Environment (JRE) on target systems
 
 ### Feature-Specific Dependencies
 - File system read/write permissions
 - Valid PlantUML syntax in input files
 - Sufficient disk space for PNG output files
+- Internet connectivity for HTTP requests
 
 ---
 
@@ -114,32 +114,33 @@ This feature will be considered complete when:
 
 ### Technical Notes
 - CLI argument parsing and validation
-- Integration with PlantUML Java library
+- HTTP client integration for PlantUML server requests
 - File I/O operations for reading .puml and writing .png files
 - Error handling for file system operations
 - Cross-platform compatibility considerations
+- Network error handling and timeout management
 
 ---
 
 ## Risks & Mitigation
 
 ### General Risk Areas
-- **Technical Complexity:** PlantUML library integration may have learning curve. Mitigation: Start with simple conversion examples and build complexity gradually.
+- **Technical Complexity:** HTTP integration may have learning curve. Mitigation: Start with simple HTTP examples and build complexity gradually.
 - **User Adoption:** Developers may prefer existing tools or manual processes. Mitigation: Focus on seamless integration with existing workflows and clear documentation.
-- **Timeline Risk:** Dependency on external PlantUML library behavior. Mitigation: Thorough testing with various PlantUML file types and early prototype development.
+- **Timeline Risk:** Dependency on external PlantUML server behavior. Mitigation: Thorough testing with various PlantUML file types and early prototype development.
 
 ### Specific Risk Considerations
-- **Graphviz Availability:** Target systems may not have Graphviz properly configured. Mitigation: Leverage PlantUML's internal Graphviz capabilities and provide clear installation guidance.
+- **Network Connectivity:** Internet connection may not be available or PlantUML server may be down. Mitigation: Implement proper error handling with retry logic and clear error messages about connectivity issues.
 - **File Permissions:** Users may lack write permissions in source directories. Mitigation: Implement proper error handling and suggest alternative output locations.
-- **PlantUML Compatibility:** Different PlantUML syntax versions may cause issues. Mitigation: Use stable PlantUML library version and document supported syntax features.
+- **PlantUML Compatibility:** Different PlantUML syntax versions may cause issues. Mitigation: Use stable PlantUML server endpoints and document supported syntax features.
 
 ---
 
 ## Success Metrics
 
 ### Key Performance Indicators
-- Successful conversion rate (target: >95% for valid PlantUML files)
-- Average conversion time per file (target: <5 seconds for typical diagrams)
+- Successful conversion rate (target: >95% for valid PlantUML files with network connectivity)
+- Average conversion time per file (target: <10 seconds for typical diagrams including network latency)
 - User error rate (target: <10% due to clear error messages)
 
 ### User Satisfaction Metrics
@@ -169,6 +170,6 @@ This feature will be considered complete when:
 
 ---
 
-**Created:** December 19, 2024
+**Created:** May 30, 2025
 **Based on Epic:** EPIC-001: PlantUML to PNG CLI Tool
-**Last Updated:** December 19, 2024
+**Last Updated:** May 30, 2025

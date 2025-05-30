@@ -36,8 +36,8 @@ Develop a CLI which pass a .puml and the tool then generate with the same filena
 - **PlantUML File Processing**: Convert from .puml to .png format
 - **Command Line Interface**: Accept .puml file path as input parameter
 - **File Output Management**: Generate PNG with same filename in same directory as source
-- **PlantUML Integration**: Utilize net.sourceforge.plantuml:plantuml:1.2023.13 dependency
-- **Graphviz Integration**: Leverage internal Graphviz rendering capabilities
+- **PlantUML Integration**: HTTP-based integration with PlantUML server for rendering
+- **Network Connectivity**: Leverages HTTP requests to PlantUML server for diagram generation
 
 ---
 
@@ -49,19 +49,19 @@ _User stories for this epic will be defined and linked here as they are created.
 
 ## Dependencies
 
-Use net.sourceforge.plantuml:plantuml:1.2023.13 as Dependency. Internally, it uses Graphviz
+Uses HTTP integration with PlantUML server (e.g., plantuml.com) for diagram rendering, eliminating local installation requirements
 
 ---
 
 ## Risks & Assumptions
 
 ### Risks
-- Graphviz installation may not be available on target systems
-- PlantUML dependency compatibility issues
+- Network connectivity issues may affect diagram generation
+- PlantUML server availability and performance
 - File permission issues when writing PNG files
 
 ### Assumptions
-- Verify that Graphviz is installed on target systems
+- Reliable internet connection available for HTTP requests to PlantUML server
 - Users have appropriate file system permissions
 - PlantUML files are syntactically valid
 
@@ -75,7 +75,7 @@ This epic will be considered complete when:
 - [ ] All dependencies are resolved
 - [ ] Solution is deployed to production
 - [ ] User acceptance testing is completed successfully
-- [ ] CLI tool successfully converts .puml files to .png format
+- [ ] CLI tool successfully converts .puml files to .png format using HTTP integration
 - [ ] Generated PNG files have the same filename as source .puml files
 - [ ] PNG files are created in the same directory as source files
 
@@ -102,5 +102,5 @@ _Related documentation will be linked here as it becomes available._
 
 ---
 
-**Created:** December 19, 2024
-**Last Updated:** December 19, 2024
+**Created:** May 30, 2025
+**Last Updated:** May 30, 2025

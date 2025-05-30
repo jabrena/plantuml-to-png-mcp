@@ -1,6 +1,6 @@
 # ADR-003: PlantUML to PNG CLI Tool - Maintainability Strategy
 
-**Date:** 2024-12-19
+**Date:** 2025-05-30
 **Status:** Proposed
 **Primary NFR Category:** Maintainability
 
@@ -14,7 +14,7 @@ The PlantUML to PNG CLI tool is a focused, single-purpose application that conve
 - **Development Context:** Single developer, no team expansion planned
 - **Simplicity Requirement:** Tool should remain easy to understand and modify
 - **Quality Standards:** Must meet established quality gates (JaCoCo coverage, compiler checks)
-- **External Dependencies:** Graphviz dependency and PlantUML library integration
+- **External Dependencies:** HTTP PlantUML server integration for diagram generation
 - **Technology Stack:** Java 24, Maven, PicoCLI framework already established
 
 ### Quality Attributes and Requirements
@@ -147,4 +147,4 @@ The "Keep It Simple" approach directly addresses the maintainability requirement
 - [NullAway](https://github.com/uber/NullAway)
 
 ---
-*This ADR focuses on maintainability through simplicity, establishing the "Keep It Simple" principle for the PlantUML CLI tool. Last updated: 2024-12-19*
+*This ADR focuses on maintainability through simplicity, establishing the "Keep It Simple" principle for the PlantUML CLI tool. Last updated: 2025-05-30*
