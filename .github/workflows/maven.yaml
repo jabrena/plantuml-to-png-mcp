@@ -23,7 +23,7 @@ jobs:
 
       - name: Test CLI commands
         run: |
-          JAR_FILE="./target/plantuml-to-png-${{ steps.get_version.outputs.VERSION }}.jar"
+          JAR_FILE="./target/puml-to-png-${{ steps.get_version.outputs.VERSION }}.jar"
           echo "Testing CLI with $JAR_FILE"
           java -jar $JAR_FILE --help
           # Run basic init commands and check exit code
@@ -34,6 +34,6 @@ jobs:
       - name: Upload jar
         uses: actions/upload-artifact@v4
         with:
-          name: plantuml-to-png-${{ steps.get_version.outputs.VERSION }}.jar
+          name: puml-to-png-${{ steps.get_version.outputs.VERSION }}.jar
           path: |
-            ./target/plantuml-to-png-${{ steps.get_version.outputs.VERSION }}.jar
+            ./target/puml-to-png-${{ steps.get_version.outputs.VERSION }}.jar

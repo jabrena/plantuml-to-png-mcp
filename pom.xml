@@ -4,8 +4,8 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>info.jab.cli</groupId>
-  <artifactId>plantuml-to-png</artifactId>
-  <version>0.2.0</version>
+  <artifactId>puml-to-png</artifactId>
+  <version>0.3.0</version>
 
   <properties>
     <java.version>24</java.version>
