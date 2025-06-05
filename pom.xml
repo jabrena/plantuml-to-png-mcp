@@ -5,7 +5,7 @@
 
   <groupId>info.jab.cli</groupId>
   <artifactId>puml-to-png</artifactId>
-  <version>0.3.0</version>
+  <version>0.4.0</version>
 
   <properties>
     <java.version>24</java.version>
@@ -15,6 +15,8 @@
 
     <!-- Dependencies -->
     <jspecify.version>1.0.0</jspecify.version>
+    <slf4j.version>2.0.17</slf4j.version>
+    <logback.version>1.5.18</logback.version>
     <picocli.version>4.7.7</picocli.version>
     <jcolor.version>5.5.1</jcolor.version>
     <jfiglet.version>0.0.9</jfiglet.version>
@@ -72,6 +74,16 @@
         <groupId>org.jspecify</groupId>
         <artifactId>jspecify</artifactId>
         <version>${jspecify.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>${slf4j.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>ch.qos.logback</groupId>
+        <artifactId>logback-classic</artifactId>
+        <version>${logback.version}</version>
     </dependency>
     <dependency>
       <groupId>info.picocli</groupId>
@@ -146,11 +158,6 @@
             <groupId>io.takari.maven</groupId>
             <artifactId>maven-timeline</artifactId>
             <version>${maven-extensions-timeline.version}</version>
-        </extension>
-        <extension>
-            <groupId>org.apache.maven.extensions</groupId>
-            <artifactId>maven-build-cache-extension</artifactId>
-            <version>${maven-extensions-build-cache.version}</version>
         </extension>
     </extensions>
 
@@ -354,7 +361,7 @@
               </filters>
               <transformers>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                  <mainClass>info.jab.core.PlantUMLToPng</mainClass>
+                  <mainClass>info.jab.core.MainApplication</mainClass>
                 </transformer>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheLicenseResourceTransformer"/>

@@ -38,7 +38,7 @@ import static org.mockito.Mockito.any;
  */
 @NullMarked
 @ExtendWith(MockitoExtension.class)
-class PlantUMLToPngTest {
+class MainApplicatonTest {
 
     @TempDir
     private Path tempDir;
@@ -52,13 +52,13 @@ class PlantUMLToPngTest {
     @Mock
     private PlantUMLFileValidator mockValidator;
 
-    private PlantUMLToPng cli;
+    private MainApplication cli;
     private CommandLine commandLine;
 
     @BeforeEach
     @SuppressWarnings("NullAway.Init")
     void setUp() {
-        cli = new PlantUMLToPng(mockValidator, mockService, mockWatchService);
+        cli = new MainApplication(mockValidator, mockService, mockWatchService);
         commandLine = new CommandLine(cli);
     }
 

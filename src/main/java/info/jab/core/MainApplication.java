@@ -9,6 +9,8 @@ import java.nio.file.Path;
 import java.util.concurrent.Callable;
 
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -31,7 +33,9 @@ import java.nio.file.Files;
     mixinStandardHelpOptions = true,
     usageHelpAutoWidth = true
 )
-public class PlantUMLToPng implements Callable<Integer> {
+public class MainApplication implements Callable<Integer> {
+
+    private static final Logger logger = LoggerFactory.getLogger(MainApplication.class);
 
     @Option(
         names = {"-f", "--file"},
@@ -54,7 +58,7 @@ public class PlantUMLToPng implements Callable<Integer> {
     /**
      * Default constructor for CLI usage.
      */
-    public PlantUMLToPng() {
+    public MainApplication() {
         this.fileValidator = new PlantUMLFileValidator();
         this.fileService = new PlantUMLFileService();
         this.watchService = new PlantUMLWatchService(fileService);
@@ -67,7 +71,7 @@ public class PlantUMLToPng implements Callable<Integer> {
      * @param fileService The PlantUML file service to use
      * @param watchService The watch service to use
      */
-    public PlantUMLToPng(PlantUMLFileValidator fileValidator, PlantUMLFileService fileService, PlantUMLWatchService watchService) {
+    public MainApplication(PlantUMLFileValidator fileValidator, PlantUMLFileService fileService, PlantUMLWatchService watchService) {
         this.fileValidator = fileValidator;
         this.fileService = fileService;
         this.watchService = watchService;
@@ -94,20 +98,20 @@ public class PlantUMLToPng implements Callable<Integer> {
             return handleSingleFileConversion(inputFile);
         }
 
-        System.out.println("Use --help to see available options.");
+        logger.info("Use --help to see available options.");
         return CliResult.KO;
     }
 
     private CliResult handleSingleFileConversion(String inputFile) {
         if (Objects.isNull(inputFile)) {
-            System.err.println("Error: No input file specified. Use -f or --file option.");
+            logger.error("Error: No input file specified. Use -f or --file option.");
             return CliResult.KO;
         }
 
         // Validate input file using PlantUMLFileValidator
         Optional<Path> validatedPath = fileValidator.validatePlantUMLFile(inputFile);
         if (validatedPath.isEmpty()) {
-            System.err.println("Invalid PlantUML file: " + inputFile);
+            logger.error("Invalid PlantUML file: {}", inputFile);
             return CliResult.KO;
         }
 
@@ -125,19 +129,19 @@ public class PlantUMLToPng implements Callable<Integer> {
         if (Objects.isNull(parameter) || parameter.trim().isEmpty()) {
             // Use current directory as default
             watchDirectory = Path.of(System.getProperty("user.dir"));
-            System.out.println("Using current directory for watching: " + parameter);
+            logger.info("Using current directory for watching: {}", parameter);
         } else {
             // Validate the provided directory
             watchDirectory = Path.of(parameter);
             if (!Files.exists(watchDirectory)) {
-                System.err.println("Error: Directory does not exist: " + parameter);
+                logger.error("Error: Directory does not exist: {}", parameter);
                 return CliResult.KO;
             }
             if (!Files.isDirectory(watchDirectory)) {
-                System.err.println("Error: Path is not a directory: " + parameter);
+                logger.error("Error: Path is not a directory: {}", parameter);
                 return CliResult.KO;
             }
-            System.out.println("Using specified directory for watching: " + parameter);
+            logger.info("Using specified directory for watching: {}", parameter);
         }
 
         int watchResult = watchService.startWatching(watchDirectory);
@@ -147,10 +151,10 @@ public class PlantUMLToPng implements Callable<Integer> {
     private static void printBanner() {
         try {
             System.out.println();
-            String asciiArt = FigletFont.convertOneLine("PlantUML to PNG CLI");
+            String asciiArt = FigletFont.convertOneLine("Puml to Png CLI");
             System.out.println(colorize(asciiArt, Attribute.GREEN_TEXT()));
         } catch (IOException e) {
-            System.out.println("Error printing banner: " + e.getMessage());
+            logger.error("Error printing banner: {}", e.getMessage());
         }
     }
 
@@ -161,7 +165,7 @@ public class PlantUMLToPng implements Callable<Integer> {
      */
     public static void main(String[] args) {
         printBanner();
-        PlantUMLToPng cli = new PlantUMLToPng();
+        MainApplication cli = new MainApplication();
         int exitCode = new CommandLine(cli).execute(args);
         System.exit(exitCode);
     }

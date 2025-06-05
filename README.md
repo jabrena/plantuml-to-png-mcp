@@ -32,9 +32,9 @@ jwebserver -p 8001 -d "$(pwd)/target/site/jacoco"
 
 ```bash
 ./mvnw clean package
-java -jar target/puml-to-png-0.3.0.jar --help
-java -jar target/puml-to-png-0.3.0.jar --file ./docs/sample-diagram.puml
-java -jar target/puml-to-png-0.3.0.jar --watch docs
+java -jar target/puml-to-png-0.4.0.jar --help
+java -jar target/puml-to-png-0.4.0.jar --file ./docs/sample-diagram.puml
+java -jar target/puml-to-png-0.4.0.jar --watch docs
 
 jbang cache clear
 jbang catalog list

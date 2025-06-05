@@ -11,6 +11,9 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.zip.Deflater;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * HTTP client for PlantUML server operations.
  *
@@ -19,6 +22,8 @@ import java.util.zip.Deflater;
  * PlantUML-specific content encoding.
  */
 public class PlantUMLHttpClient {
+
+    private static final Logger logger = LoggerFactory.getLogger(PlantUMLHttpClient.class);
 
     private static final Duration HTTP_TIMEOUT = Duration.ofSeconds(10);
 
@@ -60,11 +65,16 @@ public class PlantUMLHttpClient {
             if (response.statusCode() == 200) {
                 byte[] pngData = response.body();
                 return pngData.length > 0 ? Optional.of(pngData) : Optional.empty();
+            } else if (response.statusCode() == 400) {
+                logger.error("Status code: {}", response.statusCode());
+                byte[] pngData = response.body();
+                return pngData.length > 0 ? Optional.of(pngData) : Optional.empty();
+            } else {
+                logger.error("Status code: {}", response.statusCode());
             }
-
             return Optional.empty();
-
         } catch (Exception e) {
+            logger.error("Failed to generate PNG data. {}", e.getMessage());
             return Optional.empty();
         }
     }

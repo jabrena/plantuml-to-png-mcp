@@ -75,19 +75,72 @@ class PlantUMLWatchServiceTest {
         verify(mockPlantUMLService).processFile(pumlFile);
     }
 
+    // TODO: Technical debt.
     @Test
-    void processPlantUMLFiles_WithExistingPngFile_ShouldNotConvert() throws IOException {
+    void processPlantUMLFiles_WithExistingPngFileAndOldModificationTime_ShouldNotConvert() throws IOException, InterruptedException {
         // Given
         Path pumlFile = tempDir.resolve("existing.puml");
         Path pngFile = tempDir.resolve("existing.png");
         Files.createFile(pumlFile);
         Files.createFile(pngFile); // PNG already exists
 
+        // Wait for more than a minute to ensure the file is not considered "recently modified"
+        // For testing purposes, we'll sleep for a small amount and then use a custom watch service
+        // that considers "recently modified" as files modified in the last 100ms instead of 1 minute
+        Thread.sleep(150);
+
+        // Create a watch service with a very short "recent" threshold for testing
+        PlantUMLWatchService testWatchService = new PlantUMLWatchService(mockPlantUMLService, 100) {
+            @Override
+            boolean isFileModifiedInLastSeconds(Path filePath) {
+                try {
+                    java.nio.file.attribute.FileTime lastModified = Files.getLastModifiedTime(filePath);
+                    java.time.Instant hundredMsAgo = java.time.Instant.now().minus(100, java.time.temporal.ChronoUnit.MILLIS);
+                    return lastModified.toInstant().isAfter(hundredMsAgo);
+                } catch (IOException e) {
+                    return false;
+                }
+            }
+        };
+
         // When
-        watchService.processPlantUMLFiles(tempDir);
+        testWatchService.processPlantUMLFiles(tempDir);
 
         // Then
         verify(mockPlantUMLService, never()).processFile(pumlFile);
+    }
+
+    @Test
+    void processPlantUMLFiles_WithExistingPngFileButRecentlyModified_ShouldConvert() throws IOException {
+        // Given
+        Path pumlFile = tempDir.resolve("existing.puml");
+        Path pngFile = tempDir.resolve("existing.png");
+        Files.createFile(pumlFile);
+        Files.createFile(pngFile); // PNG already exists
+
+        when(mockPlantUMLService.processFile(pumlFile)).thenReturn(true);
+
+        // When - Since the file was just created, it should be considered "recently modified"
+        watchService.processPlantUMLFiles(tempDir);
+
+        // Then - Should process because it's recently modified
+        verify(mockPlantUMLService).processFile(pumlFile);
+    }
+
+    @Test
+    void processPlantUMLFiles_WithBothFilesRecentlyModified_ShouldConvert() throws IOException {
+        // Given
+        Path pumlFile = tempDir.resolve("both_recent.puml");
+        Path pngFile = tempDir.resolve("both_recent.png");
+        Files.createFile(pumlFile);
+        Files.createFile(pngFile); // Both files exist and are recently created
+        when(mockPlantUMLService.processFile(pumlFile)).thenReturn(true);
+
+        // When - Both files were just created, so both are considered "recently modified"
+        watchService.processPlantUMLFiles(tempDir);
+
+        // Then - Should convert because both files were recently modified (ensuring synchronization)
+        verify(mockPlantUMLService).processFile(pumlFile);
     }
 
     @Test
