@@ -7,6 +7,9 @@ import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Service class for handling PlantUML file processing operations.
  *
@@ -16,6 +19,8 @@ import java.util.Optional;
  * @since 1.0
  */
 public class PlantUMLFileService {
+
+    private static final Logger logger = LoggerFactory.getLogger(PlantUMLFileService.class);
 
     private static final String DEFAULT_PLANTUML_SERVER = "http://www.plantuml.com/plantuml";
 
@@ -56,10 +61,10 @@ public class PlantUMLFileService {
     public boolean processFile(Path inputPath) {
         Optional<Path> result = convertToPng(inputPath);
         if (result.isPresent()) {
-            System.out.println("Successfully converted: " + inputPath + " -> " + result.get());
+            logger.info("Successfully converted: {} -> {}", inputPath, result.get());
             return true;
         } else {
-            System.err.println("Failed to convert file: " + inputPath);
+            logger.error("Failed to convert file: {}", inputPath);
             return false;
         }
     }
@@ -71,7 +76,7 @@ public class PlantUMLFileService {
      * @return Optional containing the PNG output file path, or empty if conversion fails
      */
     public Optional<Path> convertToPng(Path inputPath) {
-        System.out.println("Converting PlantUML file to PNG: " + inputPath);
+        logger.info("Converting PlantUML file to PNG: {}", inputPath);
         try {
             // Read file content
             String content = Files.readString(inputPath, StandardCharsets.UTF_8);
@@ -94,9 +99,7 @@ public class PlantUMLFileService {
             Files.write(outputPath, pngData.get());
 
             return Optional.of(outputPath);
-
-        } catch (IOException | SecurityException e) {
-            // Handle file I/O errors gracefully
+        } catch (IOException e) {
             return Optional.empty();
         }
     }
