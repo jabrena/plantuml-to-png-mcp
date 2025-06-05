@@ -23,7 +23,7 @@
 
     <!-- Test dependencies -->
     <junit.version>5.12.2</junit.version>
-    <assertj.version>3.26.3</assertj.version>
+    <assertj.version>3.27.3</assertj.version>
     <mockito.version>5.18.0</mockito.version>
     <byte-buddy.version>1.17.5</byte-buddy.version>
     <wiremock.version>3.9.2</wiremock.version>
