@@ -23,21 +23,21 @@ jwebserver -p 8000 -d "$(pwd)/target/reports/"
 ./mvnw clean verify jacoco:report -Pjacoco
 jwebserver -p 8001 -d "$(pwd)/target/site/jacoco"
 
+./mvnw versions:display-property-updates
 ./mvnw versions:display-dependency-updates
 ./mvnw versions:display-plugin-updates
-./mvnw versions:display-property-updates
 ```
 
 ## How to test it?
 
 ```bash
 ./mvnw clean package
-java -jar target/puml-to-png-0.4.0.jar --help
-java -jar target/puml-to-png-0.4.0.jar --file ./docs/sample-diagram.puml
-java -jar target/puml-to-png-0.4.0.jar --watch docs
+java -jar target/puml-to-png-0.4.1.jar --help
+java -jar target/puml-to-png-0.4.1.jar --file ./docs/sample-diagram.puml
+java -jar target/puml-to-png-0.4.1.jar --watch docs
 
-jbang cache clear
-jbang catalog list
+# Update puml-to-png@jabrena only
+jbang --fresh puml-to-png@jabrena
 jbang catalog list jabrena
 
 jbang puml-to-png@jabrena --help

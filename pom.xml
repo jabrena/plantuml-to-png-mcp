@@ -5,7 +5,7 @@
 
   <groupId>info.jab.cli</groupId>
   <artifactId>puml-to-png</artifactId>
-  <version>0.4.0</version>
+  <version>0.4.1</version>
 
   <properties>
     <java.version>24</java.version>
@@ -22,7 +22,7 @@
     <jfiglet.version>0.0.9</jfiglet.version>
 
     <!-- Test dependencies -->
-    <junit.version>5.12.2</junit.version>
+    <junit.version>5.13.1</junit.version>
     <assertj.version>3.27.3</assertj.version>
     <mockito.version>5.18.0</mockito.version>
     <byte-buddy.version>1.17.5</byte-buddy.version>
@@ -356,6 +356,7 @@
                     <exclude>META-INF/*.RSA</exclude>
                     <exclude>META-INF/MANIFEST.MF</exclude>
                     <exclude>META-INF/versions/*/module-info.class</exclude>
+                    <exclude>module-info.class</exclude>
                   </excludes>
                 </filter>
               </filters>
