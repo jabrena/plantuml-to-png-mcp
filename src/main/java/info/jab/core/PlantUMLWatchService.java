@@ -9,7 +9,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.function.BooleanSupplier;
+
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,12 +25,50 @@ public class PlantUMLWatchService {
     private static final Logger logger = LoggerFactory.getLogger(PlantUMLWatchService.class);
 
     private static final long DEFAULT_POLLING_INTERVAL_MS = 5000L;
+
     private static final String PUML_EXTENSION = ".puml";
     private static final String PNG_EXTENSION = ".png";
 
     private final PlantUMLFileService plantUMLService;
     private final long pollingIntervalMs;
-    private volatile boolean stopRequested = false;
+
+    /**
+     * Represents the decision whether to convert a file and the reason for that decision.
+     */
+    public record ConversionDecision(boolean shouldConvert, ConversionReason reason) {
+
+        public static ConversionDecision convert(ConversionReason reason) {
+            return new ConversionDecision(true, reason);
+        }
+
+        public static ConversionDecision skip() {
+            return new ConversionDecision(false, ConversionReason.UP_TO_DATE);
+        }
+
+        public String getReason() {
+            return reason.getDescription();
+        }
+    }
+
+    /**
+     * Enumeration of reasons why a file might need conversion.
+     */
+    public enum ConversionReason {
+        NO_PNG_EXISTS("no .png exists"),
+        PUML_RECENTLY_MODIFIED("recently modified .puml file"),
+        SYNC_REQUIRED("both files recently modified"),
+        UP_TO_DATE("up to date");
+
+        private final String description;
+
+        ConversionReason(String description) {
+            this.description = description;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+    }
 
     /**
      * Constructor with default polling interval.
@@ -57,51 +95,19 @@ public class PlantUMLWatchService {
      *
      * This method runs indefinitely, checking for new .puml files every polling interval.
      * It converts files that don't have corresponding PNG files.
+     * Use Ctrl+C to stop the process.
      *
      * @param watchDirectory The directory to watch for PlantUML files
      * @return Exit code (0 for success, 1 for error)
      */
     public Integer startWatching(Path watchDirectory) {
-        return startWatching(watchDirectory, () -> !stopRequested);
-    }
-
-    /**
-     * Starts watching the current directory for PlantUML files.
-     *
-     * This method runs indefinitely, checking for new .puml files every polling interval.
-     * It converts files that don't have corresponding PNG files.
-     *
-     * @return Exit code (0 for success, 1 for error)
-     */
-    public Integer startWatching() {
-        return startWatching(Path.of(System.getProperty("user.dir")));
-    }
-
-    /**
-     * Requests the watch service to stop after the current iteration completes.
-     */
-    public void stopWatching() {
-        this.stopRequested = true;
-    }
-
-    /**
-     * Package-private method for testing that allows control over the loop condition.
-     *
-     * @param watchDirectory The directory to watch for PlantUML files
-     * @param shouldContinue Function that returns true if the loop should continue
-     * @return Exit code (0 for success, 1 for error)
-     */
-    Integer startWatching(Path watchDirectory, BooleanSupplier shouldContinue) {
         logger.info("Starting watch mode in directory: {}", watchDirectory);
 
         try {
-            while (shouldContinue.getAsBoolean()) {
+            while (true) {
                 processPlantUMLFiles(watchDirectory);
-                if (shouldContinue.getAsBoolean()) { // Check again before sleeping
-                    Thread.sleep(pollingIntervalMs);
-                }
+                Thread.sleep(pollingIntervalMs);
             }
-            return 0;
 
         } catch (InterruptedException e) {
             logger.error("Watch mode interrupted. Exiting...");
@@ -126,23 +132,60 @@ public class PlantUMLWatchService {
         if (!pumlFiles.isEmpty()) {
             pumlFiles.forEach(file -> {
                 Path relativePath = directory.relativize(file);
-                Path pngFile = getPngPath(file);
-                boolean pngExists = Files.exists(pngFile);
-                boolean isRecentlyModified = isFileModifiedInLastSeconds(file);
+                ConversionDecision decision = shouldConvertFile(file);
 
-                // Convert if PNG doesn't exist OR if PUML was modified in the last minute
-                // OR if both files were modified in the same minute (to ensure synchronization)
-                boolean bothFilesModifiedInSameMinute = pngExists && isRecentlyModified && !isFileModifiedInLastSeconds(pngFile);
-
-                // TODO: Technical debt.
-                if (!pngExists || isRecentlyModified || bothFilesModifiedInSameMinute) {
-                    String reason = !pngExists ? "no .png exists" :
-                                   bothFilesModifiedInSameMinute ? "recently modified .puml file" : "both files recently modified";
-                    logger.info("Found: {} ({})", relativePath, reason);
+                if (decision.shouldConvert()) {
+                    logger.info("Found: {} ({})", relativePath, decision.getReason());
                     convertToPng(file);
                 }
             });
         }
+    }
+
+    /**
+     * Determines whether a PUML file should be converted to PNG.
+     * Package-private to facilitate testing.
+     *
+     * @param pumlFile The PUML file to evaluate
+     * @return ConversionDecision indicating whether to convert and why
+     */
+    ConversionDecision shouldConvertFile(Path pumlFile) {
+        Path pngFile = getPngPath(pumlFile);
+        boolean pngExists = Files.exists(pngFile);
+        boolean pumlRecentlyModified = isFileModifiedInLastSeconds(pumlFile);
+
+        // Primary decision: convert if PNG doesn't exist
+        if (!pngExists) {
+            return ConversionDecision.convert(ConversionReason.NO_PNG_EXISTS);
+        }
+
+        // Secondary decision: convert if PUML was recently modified
+        if (pumlRecentlyModified) {
+            return ConversionDecision.convert(ConversionReason.PUML_RECENTLY_MODIFIED);
+        }
+
+        // Tertiary decision: convert if both files need synchronization
+        if (requiresSynchronization(pumlFile, pngFile)) {
+            return ConversionDecision.convert(ConversionReason.SYNC_REQUIRED);
+        }
+
+        return ConversionDecision.skip();
+    }
+
+    /**
+     * Checks if the PUML and PNG files require synchronization.
+     * This happens when both files were modified recently but not at the same time.
+     *
+     * @param pumlFile The PUML file
+     * @param pngFile The PNG file
+     * @return true if synchronization is required
+     */
+    private boolean requiresSynchronization(Path pumlFile, Path pngFile) {
+        boolean pumlRecentlyModified = isFileModifiedInLastSeconds(pumlFile);
+        boolean pngRecentlyModified = isFileModifiedInLastSeconds(pngFile);
+
+        // Synchronization needed if PUML was modified but PNG wasn't
+        return pumlRecentlyModified && !pngRecentlyModified;
     }
 
     /**

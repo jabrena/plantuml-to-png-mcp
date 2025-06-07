@@ -23,9 +23,9 @@ jwebserver -p 8000 -d "$(pwd)/target/reports/"
 ./mvnw clean verify jacoco:report -Pjacoco
 jwebserver -p 8001 -d "$(pwd)/target/site/jacoco"
 
+./mvnw versions:display-property-updates
 ./mvnw versions:display-dependency-updates
 ./mvnw versions:display-plugin-updates
-./mvnw versions:display-property-updates
 ```
 
 ## How to test it?
