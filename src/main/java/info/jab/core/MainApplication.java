@@ -153,6 +153,7 @@ public class MainApplication implements Callable<Integer> {
             System.out.println();
             String asciiArt = FigletFont.convertOneLine("Puml to Png CLI");
             System.out.println(colorize(asciiArt, Attribute.GREEN_TEXT()));
+            new GitInfo().print();
         } catch (IOException e) {
             logger.error("Error printing banner: {}", e.getMessage());
         }
