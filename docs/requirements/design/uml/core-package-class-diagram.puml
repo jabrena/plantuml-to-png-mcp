@@ -1,0 +1,168 @@
+@startuml CorePackage_ClassDiagram
+!theme plain
+skinparam classAttributeIconSize 0
+skinparam classFontStyle bold
+skinparam packageStyle rectangle
+
+package "info.jab.core" {
+
+    enum CliResult {
+        + OK : CliResult
+        + KO : CliResult
+        --
+        - exitCode : int
+        --
+        + CliResult(exitCode : int)
+        + getExitCode() : int
+    }
+
+    class MainApplication {
+        - logger : Logger
+        - inputFile : String
+        - watchDirectory : String
+        - fileValidator : PlantUMLFileValidator
+        - fileService : PlantUMLFileService
+        - watchService : PlantUMLWatchService
+        --
+        + MainApplication()
+        + MainApplication(fileValidator, fileService, watchService)
+        + call() : Integer
+        + execute() : CliResult
+        - handleSingleFileConversion(inputFile : String) : CliResult
+        - handleWatchMode(parameter : String) : CliResult
+        - printBanner() : void
+        + main(args : String[]) : void
+    }
+
+    class PlantUMLFileValidator {
+        - PLANTUML_EXTENSION : String = ".puml"
+        --
+        + validatePlantUMLFile(filePath : String) : Optional<Path>
+        - isFilePathValid(filePath : String) : boolean
+        - isFileExists(path : Path) : boolean
+        - isRegularFile(path : Path) : boolean
+        - isReadable(path : Path) : boolean
+        - hasPlantUMLExtension(path : Path) : boolean
+    }
+
+    class PlantUMLFileService {
+        - logger : Logger
+        - DEFAULT_PLANTUML_SERVER : String
+        - httpClient : PlantUMLHttpClient
+        --
+        + PlantUMLFileService()
+        + PlantUMLFileService(plantUmlServerUrl : String)
+        + PlantUMLFileService(httpClient : PlantUMLHttpClient)
+        + processFile(inputPath : Path) : boolean
+        + convertToPng(inputPath : Path) : Optional<Path>
+        - generateOutputPath(inputPath : Path) : Path
+        - isValidPlantUMLSyntax(plantUMLContent : String) : boolean
+        + generatePngData(plantUMLContent : String) : Optional<byte[]>
+    }
+
+    class PlantUMLHttpClient {
+        - logger : Logger
+        - HTTP_TIMEOUT : Duration
+        - serverUrl : String
+        - httpClient : HttpClient
+        --
+        + PlantUMLHttpClient(serverUrl : String)
+        + generatePngData(plantUMLContent : String) : Optional<byte[]>
+        - processHttpResponse(response : HttpResponse<byte[]>) : Optional<byte[]>
+        - processPngData(pngData : byte[]) : Optional<byte[]>
+        - encodePlantUMLContent(plantUMLContent : String) : String
+        - encodePlantUMLBase64(data : byte[]) : String
+        - buildPngUrl(encodedContent : String) : String
+        - createHttpRequest(requestUrl : String) : HttpRequest
+        + getServerUrl() : String
+    }
+
+    class PlantUMLWatchService {
+        - logger : Logger
+        - DEFAULT_POLLING_INTERVAL_MS : long
+        - PUML_EXTENSION : String
+        - PNG_EXTENSION : String
+        - plantUMLService : PlantUMLFileService
+        - pollingIntervalMs : long
+        --
+        + PlantUMLWatchService(plantUMLService : PlantUMLFileService)
+        + PlantUMLWatchService(plantUMLService, pollingIntervalMs : long)
+        + startWatching(watchDirectory : Path) : Integer
+        + processPlantUMLFiles(directory : Path) : void
+        + shouldConvertFile(pumlFile : Path) : ConversionDecision
+        - requiresSynchronization(pumlFile : Path, pngFile : Path) : boolean
+        - listPlantUMLFiles(directory : Path) : List<Path>
+        - getPngPath(pumlFile : Path) : Path
+        + isFileModifiedInLastSeconds(filePath : Path) : boolean
+        - convertToPng(inputPath : Path) : void
+    }
+
+    class "ConversionDecision" as ConversionDecision {
+        + shouldConvert : boolean
+        + reason : ConversionReason
+        --
+        + convert(reason : ConversionReason) : ConversionDecision
+        + skip() : ConversionDecision
+        + getReason() : String
+    }
+
+    enum ConversionReason {
+        + NO_PNG_EXISTS
+        + PUML_RECENTLY_MODIFIED
+        + SYNC_REQUIRED
+        + UP_TO_DATE
+        --
+        - description : String
+        --
+        + ConversionReason(description : String)
+        + getDescription() : String
+    }
+
+    class GitInfo {
+        - gitPropertiesStreamSupplier : Supplier<InputStream>
+        --
+        + GitInfo()
+        + GitInfo(gitPropertiesStreamSupplier : Supplier<InputStream>)
+        + print() : void
+    }
+}
+
+' External Dependencies (simplified)
+class "CommandLine" as CommandLine <<picocli>> {
+    + execute(args : String[]) : int
+}
+
+interface "Callable<Integer>" as Callable <<java.util.concurrent>> {
+    + call() : Integer
+}
+
+' Relationships
+MainApplication ..|> Callable : implements
+MainApplication ||--|| PlantUMLFileValidator : composition
+MainApplication ||--|| PlantUMLFileService : composition
+MainApplication ||--|| PlantUMLWatchService : composition
+MainApplication ..> CliResult : uses
+MainApplication ..> CommandLine : dependency
+
+PlantUMLFileService ||--|| PlantUMLHttpClient : composition
+PlantUMLFileService ..> CliResult : uses
+
+PlantUMLWatchService ||--|| PlantUMLFileService : composition
+PlantUMLWatchService +-- ConversionDecision : inner class
+PlantUMLWatchService +-- ConversionReason : inner enum
+ConversionDecision ||--|| ConversionReason : composition
+
+MainApplication ..> GitInfo : dependency
+
+' Notes
+note right of MainApplication : Entry point implementing\nCommand pattern with picocli.\nHandles CLI arguments and\ncoordinates other services.
+
+note right of PlantUMLFileService : Core business logic for\nconverting PlantUML files\nto PNG format.
+
+note right of PlantUMLHttpClient : Handles HTTP communication\nwith PlantUML server including\ncustom encoding algorithm.
+
+note right of PlantUMLWatchService : Implements polling-based\nfile watching with intelligent\nconversion decisions.
+
+note top of ConversionDecision : Record class representing\nconversion decision with\nreason for action.
+
+@enduml

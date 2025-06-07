@@ -5,7 +5,7 @@
 
   <groupId>info.jab.cli</groupId>
   <artifactId>puml-to-png</artifactId>
-  <version>0.4.1</version>
+  <version>0.5.0</version>
 
   <properties>
     <java.version>24</java.version>
