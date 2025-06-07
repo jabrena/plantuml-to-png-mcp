@@ -62,21 +62,43 @@ public class PlantUMLHttpClient {
             HttpResponse<byte[]> response = httpClient.send(request,
                 HttpResponse.BodyHandlers.ofByteArray());
 
-            if (response.statusCode() == 200) {
-                byte[] pngData = response.body();
-                return pngData.length > 0 ? Optional.of(pngData) : Optional.empty();
-            } else if (response.statusCode() == 400) {
-                logger.error("Status code: {}", response.statusCode());
-                byte[] pngData = response.body();
-                return pngData.length > 0 ? Optional.of(pngData) : Optional.empty();
-            } else {
-                logger.error("Status code: {}", response.statusCode());
-            }
-            return Optional.empty();
+            return processHttpResponse(response);
         } catch (Exception e) {
             logger.error("Failed to generate PNG data. {}", e.getMessage());
             return Optional.empty();
         }
+    }
+
+    /**
+     * Processes HTTP response using functional approach with switch expressions.
+     *
+     * @param response the HTTP response to process
+     * @return Optional containing PNG data if successful, empty otherwise
+     */
+    private Optional<byte[]> processHttpResponse(HttpResponse<byte[]> response) {
+        return switch (response.statusCode()) {
+            case 200 -> processPngData(response.body());
+            case 400 -> {
+                // Useful for debug, server returns a black image with useful information to debug.
+                logger.error("Status code: {}", response.statusCode());
+                yield processPngData(response.body());
+            }
+            default -> {
+                logger.error("Status code: {}", response.statusCode());
+                yield Optional.empty();
+            }
+        };
+    }
+
+    /**
+     * Pure function to process PNG data from response body.
+     *
+     * @param pngData the raw PNG data from the response
+     * @return Optional containing the PNG data if valid, empty if null or empty
+     */
+    private Optional<byte[]> processPngData(byte[] pngData) {
+        return Optional.ofNullable(pngData)
+            .filter(data -> data.length > 0);
     }
 
     /**
