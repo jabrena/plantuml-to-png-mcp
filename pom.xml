@@ -23,13 +23,13 @@
 
     <!-- Test dependencies -->
     <junit.version>5.12.2</junit.version>
-    <assertj.version>3.26.3</assertj.version>
+    <assertj.version>3.27.3</assertj.version>
     <mockito.version>5.18.0</mockito.version>
     <byte-buddy.version>1.17.5</byte-buddy.version>
-    <wiremock.version>3.9.2</wiremock.version>
+    <wiremock.version>3.13.0</wiremock.version>
 
     <!-- Maven Extensions -->
-    <maven-extensions-timeline.version>2.0.1</maven-extensions-timeline.version>
+    <maven-extensions-timeline.version>2.0.3</maven-extensions-timeline.version>
     <maven-extensions-build-cache.version>1.2.0</maven-extensions-build-cache.version>
 
     <!-- Maven Plugins -->
@@ -37,7 +37,7 @@
     <maven-plugins-enforcer.version>3.5.0</maven-plugins-enforcer.version>
     <maven-plugins-compiler.version>3.14.0</maven-plugins-compiler.version>
     <error-prone.version>2.38.0</error-prone.version>
-    <nullaway.version>0.11.0</nullaway.version>
+    <nullaway.version>0.12.7</nullaway.version>
     <maven-plugins-surefire.version>3.5.3</maven-plugins-surefire.version>
     <maven-plugins-failsafe.version>3.5.3</maven-plugins-failsafe.version>
     <maven-plugins-jxr.version>3.6.0</maven-plugins-jxr.version>
