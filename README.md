@@ -12,21 +12,7 @@ Using this project, you could simplify this step.
 
 ## How to build in local?
 
-```bash
-./mvnw dependency:tree
-./mvnw buildplan:list-phase
-./mvnw license:third-party-report
-jwebserver -p 8000 -d "$(pwd)/target/reports/"
-./mvnw clean verify
-./mvnw clean verify -DENABLE_INTEGRATION_TESTS=true
-./mvnw clean verify surefire-report:report
-./mvnw clean verify jacoco:report -Pjacoco
-jwebserver -p 8001 -d "$(pwd)/target/site/jacoco"
-
-./mvnw versions:display-property-updates
-./mvnw versions:display-dependency-updates
-./mvnw versions:display-plugin-updates
-```
+Review the document [README-DEV](./README-DEV.md)
 
 ## How to test it?
 
