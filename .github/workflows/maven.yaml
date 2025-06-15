@@ -15,7 +15,7 @@ jobs:
           distribution: 'graalvm' # See 'Supported distributions' for available options
           java-version: '24'
       - name: Maven build
-        run: ./mvnw --batch-mode --no-transfer-progress verify --file pom.xml jacoco:report -Pjacoco -DENABLE_INTEGRATION_TESTS=true
+        run: ./mvnw --batch-mode --no-transfer-progress verify --file pom.xml jacoco:report -Pjacoco -DENABLE_INTEGRATION_TESTS=true -Psonar sonar:sonar -Dsonar.token=68148336c39f18ab75b248249553a753fdd5ebbf
 
       - name: Get Maven project version
         id: get_version

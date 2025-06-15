@@ -33,17 +33,19 @@
     <maven-extensions-build-cache.version>1.2.0</maven-extensions-build-cache.version>
 
     <!-- Maven Plugins -->
-    <maven-plugins-flatten.version>1.7.0</maven-plugins-flatten.version>
-    <maven-plugins-enforcer.version>3.5.0</maven-plugins-enforcer.version>
-    <maven-plugins-compiler.version>3.14.0</maven-plugins-compiler.version>
+    <maven-plugin-flatten.version>1.7.0</maven-plugin-flatten.version>
+    <maven-plugin-enforcer.version>3.5.0</maven-plugin-enforcer.version>
+    <extra-enforcer-rules.version>1.9.0</extra-enforcer-rules.version>
+    <maven-plugin-compiler.version>3.14.0</maven-plugin-compiler.version>
     <error-prone.version>2.38.0</error-prone.version>
     <nullaway.version>0.12.7</nullaway.version>
-    <maven-plugins-surefire.version>3.5.3</maven-plugins-surefire.version>
-    <maven-plugins-failsafe.version>3.5.3</maven-plugins-failsafe.version>
-    <maven-plugins-jxr.version>3.6.0</maven-plugins-jxr.version>
-    <maven-plugins-jacoco.version>0.8.13</maven-plugins-jacoco.version>
-    <maven-plugins-versions.version>2.18.0</maven-plugins-versions.version>
-    <maven-plugins-git-commit-id.version>4.9.10</maven-plugins-git-commit-id.version>
+    <maven-plugin-surefire.version>3.5.3</maven-plugin-surefire.version>
+    <maven-plugin-failsafe.version>3.5.3</maven-plugin-failsafe.version>
+    <maven-plugin-jxr.version>3.6.0</maven-plugin-jxr.version>
+    <maven-plugin-jacoco.version>0.8.13</maven-plugin-jacoco.version>
+    <maven-plugin-versions.version>2.18.0</maven-plugin-versions.version>
+    <maven-plugin-git-commit-id.version>4.9.10</maven-plugin-git-commit-id.version>
+    <maven-plugin-sonar.version>4.0.0.4121</maven-plugin-sonar.version>
 
     <!-- Coverage -->
     <coverage.level>80</coverage.level>
@@ -166,7 +168,7 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>flatten-maven-plugin</artifactId>
-        <version>${maven-plugins-flatten.version}</version>
+        <version>${maven-plugin-flatten.version}</version>
         <configuration>
         </configuration>
         <executions>
@@ -191,7 +193,14 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
-        <version>${maven-plugins-enforcer.version}</version>
+        <version>${maven-plugin-enforcer.version}</version>
+        <dependencies>
+          <dependency>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>extra-enforcer-rules</artifactId>
+            <version>${extra-enforcer-rules.version}</version>
+          </dependency>
+        </dependencies>
         <executions>
           <execution>
             <id>enforce</id>
@@ -199,6 +208,7 @@
               <rules>
                 <dependencyConvergence />
                 <banDuplicatePomDependencyVersions />
+                <banCircularDependencies />
                 <requireMavenVersion>
                   <version>${maven.version}</version>
                 </requireMavenVersion>
@@ -224,7 +234,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>${maven-plugins-compiler.version}</version>
+        <version>${maven-plugin-compiler.version}</version>
         <configuration>
           <release>${java.version}</release>
           <compilerArgs>
@@ -262,7 +272,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>${maven-plugins-surefire.version}</version>
+        <version>${maven-plugin-surefire.version}</version>
         <configuration>
           <skipAfterFailureCount>1</skipAfterFailureCount>
           <includes>
@@ -278,7 +288,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
-        <version>${maven-plugins-failsafe.version}</version>
+        <version>${maven-plugin-failsafe.version}</version>
         <configuration>
           <includes>
             <include>**/*IT.java</include>
@@ -308,7 +318,7 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>versions-maven-plugin</artifactId>
-        <version>${maven-plugins-versions.version}</version>
+        <version>${maven-plugin-versions.version}</version>
         <configuration>
           <allowSnapshots>false</allowSnapshots>
         </configuration>
@@ -318,7 +328,7 @@
       <plugin>
         <groupId>pl.project13.maven</groupId>
         <artifactId>git-commit-id-plugin</artifactId>
-        <version>${maven-plugins-git-commit-id.version}</version>
+        <version>${maven-plugin-git-commit-id.version}</version>
         <executions>
           <execution>
             <id>get-the-git-infos</id>
@@ -388,7 +398,7 @@
           <plugin>
             <groupId>org.jacoco</groupId>
             <artifactId>jacoco-maven-plugin</artifactId>
-            <version>${maven-plugins-jacoco.version}</version>
+            <version>${maven-plugin-jacoco.version}</version>
             <executions>
               <execution>
                 <id>prepare-agent</id>
@@ -434,6 +444,45 @@
         </plugins>
       </build>
     </profile>
+
+    <profile>
+      <id>sonar</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <properties>
+            <!-- Sonar Configuration -->
+            <sonar.organization>jabrena</sonar.organization>
+            <sonar.projectKey>jabrena_plantuml-to-png-mcp</sonar.projectKey>
+            <sonar.projectName>PlantUML to PNG MCP</sonar.projectName>
+            <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+            <sonar.java.source>${java.version}</sonar.java.source>
+            <sonar.java.target>${java.version}</sonar.java.target>
+            <sonar.java.binaries>target/classes</sonar.java.binaries>
+            <sonar.java.test.binaries>target/test-classes</sonar.java.test.binaries>
+            <sonar.sources>src/main/java</sonar.sources>
+            <sonar.tests>src/test/java</sonar.tests>
+            <sonar.coverage.exclusions>**/*Test*.java,**/*IT*.java</sonar.coverage.exclusions>
+            <sonar.cpd.exclusions>**/*Test*.java,**/*IT*.java</sonar.cpd.exclusions>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.sonarsource.scanner.maven</groupId>
+            <artifactId>sonar-maven-plugin</artifactId>
+            <version>${maven-plugin-sonar.version}</version>
+            <executions>
+              <execution>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sonar</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
   </profiles>
 
   <reporting>
@@ -442,7 +491,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-report-plugin</artifactId>
-        <version>${maven-plugins-surefire.version}</version>
+        <version>${maven-plugin-surefire.version}</version>
         <configuration>
           <outputName>junit-report</outputName>
           <showSuccess>true</showSuccess>
@@ -453,7 +502,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jxr-plugin</artifactId>
-        <version>${maven-plugins-jxr.version}</version>
+        <version>${maven-plugin-jxr.version}</version>
       </plugin>
     </plugins>
   </reporting>
