@@ -14,6 +14,8 @@ jwebserver -p 8000 -d "$(pwd)/target/reports/"
 # Clean the project
 ./mvnw clean
 
+./mvnw spotless:apply
+
 # Run integration tests
 ./mvnw clean verify
 ./mvnw clean verify -DENABLE_INTEGRATION_TESTS=true

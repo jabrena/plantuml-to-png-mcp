@@ -1,11 +1,10 @@
 package info.jab.core;
 
+import java.io.IOException;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
-
-import java.io.IOException;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

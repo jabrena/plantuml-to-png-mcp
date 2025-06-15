@@ -1,24 +1,21 @@
 package info.jab.core;
 
+import com.diogonunes.jcolor.Attribute;
+import com.github.lalyos.jfiglet.FigletFont;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.Callable;
+import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.concurrent.Callable;
-
-import org.jspecify.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.Objects;
-import java.util.Optional;
-
-import com.diogonunes.jcolor.Attribute;
 import static com.diogonunes.jcolor.Ansi.colorize;
-import com.github.lalyos.jfiglet.FigletFont;
-import java.nio.file.Files;
 
 /**
  * PlantUML to PNG CLI Tool

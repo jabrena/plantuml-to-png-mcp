@@ -1,12 +1,12 @@
 package info.jab.core;
 
+import com.diogonunes.jcolor.Attribute;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.function.Supplier;
 
-import com.diogonunes.jcolor.Attribute;
 import static com.diogonunes.jcolor.Ansi.colorize;
 
 public class GitInfo {

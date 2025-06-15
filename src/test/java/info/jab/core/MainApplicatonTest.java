@@ -1,5 +1,8 @@
 package info.jab.core;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Optional;
 import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -10,16 +13,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import picocli.CommandLine;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Optional;
-
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.any;
 
 /**
  * Unit tests for PlantUMLToPng class.
