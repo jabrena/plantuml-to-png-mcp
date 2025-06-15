@@ -6,7 +6,6 @@ import java.nio.file.Paths;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
-
 import org.jspecify.annotations.Nullable;
 
 /**
