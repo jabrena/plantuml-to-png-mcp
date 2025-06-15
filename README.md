@@ -1,5 +1,9 @@
 # Plantuml to PNG CLI
 
+[![CI Builds](https://github.com/jabrena/plantuml-to-png-cli/actions/workflows/maven.yaml/badge.svg)](https://github.com/jabrena/plantuml-to-png-cli/actions/workflows/maven.yaml)
+
+[![SonarQube Cloud](https://sonarcloud.io/images/project_badges/sonarcloud-light.svg)](https://sonarcloud.io/summary/new_code?id=jabrena_plantuml-to-png-mcp)
+
 ## Motivation
 
 Plantuml-to-png is a CLI utility designed to convert PlantUML files (.puml) to PNG format
