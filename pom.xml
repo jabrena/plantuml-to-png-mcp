@@ -26,7 +26,7 @@
         <junit.version>5.13.1</junit.version>
         <assertj.version>3.27.3</assertj.version>
         <mockito.version>5.18.0</mockito.version>
-        <byte-buddy.version>1.17.5</byte-buddy.version>
+        <byte-buddy.version>1.17.6</byte-buddy.version>
         <wiremock.version>3.13.1</wiremock.version>
 
         <!-- Maven Extensions -->
