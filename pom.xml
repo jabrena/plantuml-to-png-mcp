@@ -23,7 +23,7 @@
         <jfiglet.version>0.0.9</jfiglet.version>
 
         <!-- Test dependencies -->
-        <junit.version>5.13.1</junit.version>
+        <junit.version>5.13.2</junit.version>
         <assertj.version>3.27.3</assertj.version>
         <mockito.version>5.18.0</mockito.version>
         <byte-buddy.version>1.17.5</byte-buddy.version>
